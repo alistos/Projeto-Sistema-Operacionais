@@ -61,7 +61,7 @@ void print_lista(ListaLinks *lista){
 ListaLinks* buscarLinks(char* nome_arquivo){
   FILE *arquivo = fopen(nome_arquivo,"r");
   ListaLinks *lista = startLista();
-  char *link = malloc(MAXBUFFER*sizeof(char)), c = getc(arquivo);
+  char c = getc(arquivo);
 
   while(c != EOF){
     switch (c) {
