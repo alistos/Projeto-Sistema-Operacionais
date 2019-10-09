@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "analizador.h"
+#include "analizador.c"
 
 int main(int argc, char const *argv[]) {
   ListaLinks *lista = buscarLinks("site.html");
