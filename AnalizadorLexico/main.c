@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include "analizador.h"
 
-int main(int argc, char const *argv[]) {
-  ListaLinks *lista = buscarLinks("site.html");
+int main(int argc, char *argv[]) {
+  ListaLinks *lista = buscarLinks(argv[1]);
   print_lista(lista);
   return 0;
 }
