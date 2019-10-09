@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h> //strlen
 #include <sys/socket.h>
-#include <arpa/inet.h> //inet_addr
+#include <arpa/inet.h> //inet_aton
 
 #include <unistd.h>
 #include <pthread.h>
@@ -12,6 +12,7 @@ int main(int argc, char *argv[]){
     int sock_desc;
     struct sockaddr_in servidor;
     char *msg, resp_servidor[10000];
+    char *end = argv[1];
 
     //Criar o socket
     //socket(dominio, tipo de socket, protocolo)
@@ -22,19 +23,18 @@ int main(int argc, char *argv[]){
     }
 
     //definir a estrutura do socket servidor
-    //servidor.sin_family = AF_INET;
-    servidor.sin_family = inet_addr("172.217.28.4");
-    servidor.sin_addr.s_addr = INADDR_ANY;
+    servidor.sin_family = AF_INET;
     servidor.sin_port = htons(80); //port 80 é onde a maioria dos webservers rodam
+    inet_aton(end, &servidor.sin_addr); //a função inet_aton envia o IP para o servidor
 
     //Conectar a um servidor remoto
     if(connect(sock_desc , (struct sockaddr *)&servidor , sizeof(servidor)) < 0){
         printf("Nao foi possivel estabelecer a conexao!");
         return 0;
     }
-    else{
+
         printf("Conexao estabelecida com sucesso!\n");
-    }
+
 
     //Enviar dados ao servidor
     msg = "GET / HTTP/1.1\r\n\r\n"; //comando HTTP para pegar a pagina principal de um website
