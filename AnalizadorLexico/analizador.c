@@ -61,8 +61,8 @@ void print_lista(ListaLinks *lista){
 ListaLinks* buscarLinks(char* nome_arquivo){
   FILE *arquivo = fopen(nome_arquivo,"r");
   ListaLinks *lista = startLista();
-  char c = getc(arquivo);
-
+  char c = getc(arquivo), *href = "href";
+  
   while(c != EOF){
     switch (c) {
       case 'h':
@@ -106,8 +106,7 @@ char* pegar_link(FILE *arquivo){
     link[i] = getc(arquivo);
     if(link[i]=='"'){
       link[i] = '\0';
-      break;
-    }
+      return link;
+   }
   }
-  return link;
 }
