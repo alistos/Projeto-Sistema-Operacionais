@@ -3,7 +3,8 @@
 #include "analizador.h"
 
 int main(int argc, char *argv[]) {
-  ListaLinks *lista = buscarLinks(argv[1]);
-  print_lista(lista);
+  char *dominio = "www.youtube.com";
+  char *link = "www.youtube.com/laksjklajs";
+  printf("%d\n",contido_no_dominio(link,dominio));
   return 0;
 }

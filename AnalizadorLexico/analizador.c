@@ -3,6 +3,8 @@
 #include <string.h>
 #include "analizador.h"
 #define MAXBUFFER 512
+#define TRUE 1
+#define FALSE 0
 
 No* startNo(char *link){
   No *novo = malloc(sizeof(No));
@@ -107,6 +109,22 @@ char* pegar_link(FILE *arquivo){
     if(link[i]=='"'){
       link[i] = '\0';
       return link;
-   }
+    }
   }
+}
+
+int contido_no_dominio(char *link, char *dominio){
+  int contido = FALSE;
+
+  if(link[0] == '/'){contido = TRUE;}
+  else{
+    int len_link = strlen(link), len_dominio = strlen(dominio);
+
+    if(len_link >= len_dominio){
+      char *dominio_link = malloc(len_dominio*sizeof(char));
+      strncpy(dominio_link,dominio,len_dominio);
+      if(strncmp(dominio_link, dominio, len_dominio) == 0){contido = TRUE;}
+    }
+  }
+  return contido;
 }
