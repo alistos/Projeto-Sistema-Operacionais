@@ -116,15 +116,29 @@ char* pegar_link(FILE *arquivo){
 int contido_no_dominio(char *link, char *dominio){
   int contido = FALSE;
 
-  if(link[0] == '/'){contido = TRUE;}
+  if(link[0] == '/' && link[1] != '/'){contido = TRUE;}
   else{
     int len_link = strlen(link), len_dominio = strlen(dominio);
 
     if(len_link >= len_dominio){
       char *dominio_link = malloc(len_dominio*sizeof(char));
-      strncpy(dominio_link,dominio,len_dominio);
-      if(strncmp(dominio_link, dominio, len_dominio) == 0){contido = TRUE;}
+      strncpy(dominio_link,link,len_dominio);
+      if(strcmp(dominio_link, dominio) == 0){contido = TRUE;}
     }
   }
   return contido;
+}
+
+ListaLinks* filtrar_lista(ListaLinks *lista, char *dominio){
+  ListaLinks *lista_filtrada = startLista();
+  No *no = lista->primeiro, *temp;
+
+  while(no!=NULL){
+    if(contido_no_dominio(no->link,dominio)){addLista(lista_filtrada,no->link);}
+    temp = no;
+    no = no->proximo;
+    free(temp);
+  }
+  free(lista);
+  return lista_filtrada;
 }
