@@ -46,7 +46,9 @@ char* pop(ListaLinks *lista){
     lista->primeiro = temp->proximo;
     lista->quantLinks -= 1;
 
-    if(lista->primeiro == NULL){lista->ultimo = NULL;}
+    if(lista->primeiro == NULL){
+      lista->ultimo = NULL;
+    }
   }
   return link;
 }
@@ -116,14 +118,18 @@ char* pegar_link(FILE *arquivo){
 int contido_no_dominio(char *link, char *dominio){
   int contido = FALSE;
 
-  if(link[0] == '/' && link[1] != '/'){contido = TRUE;}
+  if(link[0] == '/' && link[1] != '/'){
+    contido = TRUE;
+  }
   else{
     int len_link = strlen(link), len_dominio = strlen(dominio);
 
     if(len_link >= len_dominio){
       char *dominio_link = malloc(len_dominio*sizeof(char));
       strncpy(dominio_link,link,len_dominio);
-      if(strcmp(dominio_link, dominio) == 0){contido = TRUE;}
+      if(strcmp(dominio_link, dominio) == 0){
+        contido = TRUE;
+      }
     }
   }
   return contido;
@@ -134,7 +140,9 @@ ListaLinks* filtrar_lista(ListaLinks *lista, char *dominio){
   No *no = lista->primeiro, *temp;
 
   while(no!=NULL){
-    if(contido_no_dominio(no->link,dominio)){addLista(lista_filtrada,no->link);}
+    if(contido_no_dominio(no->link,dominio)){
+      addLista(lista_filtrada,no->link);
+    }
     temp = no;
     no = no->proximo;
     free(temp);
