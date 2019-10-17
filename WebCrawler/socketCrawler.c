@@ -11,8 +11,9 @@
 int main(int argc, char *argv[]){
     int sock_desc;
     struct sockaddr_in servidor;
-    char *msg, resp_servidor[10000];
+    char msg[100], resp_servidor[10000];
     char *end = argv[1];
+    char *url = argv[2];
     int bytes_read;
     FILE *fp;
     fp = fopen("site.html", "w");
@@ -43,7 +44,10 @@ int main(int argc, char *argv[]){
 
     //Enviar dados ao servidor
     //msg = "GET /index.html HTTP/1.1\r\nHost: www.google.com\r\n\r\n"; //comando HTTP para pegar a pagina principal de um website
-    msg = "GET /index.html HTTP/1.1\r\n\r\n";
+    strcpy(msg, "GET / HTTP/1.1\r\nHost: ");
+    strcat(msg, url);
+    strcat(msg, "\r\nConnection: close\r\n\r\n");
+    printf("%s\n",msg);
     if(send(sock_desc, msg, strlen(msg), 0) < 0){
         printf("Nao foi possivel enviar os dados!");
         return 0;
@@ -59,10 +63,11 @@ int main(int argc, char *argv[]){
         }
         else{
             fprintf(fp, "%.*s", bytes_read, resp_servidor);
-                    }
+        }
     } while(bytes_read > 0);
-
+    printf("%s\n",resp_servidor);
     fclose(fp);
+    close(sock_desc);
 
     return 0;
 }
