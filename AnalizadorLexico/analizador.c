@@ -3,6 +3,8 @@
 #include <string.h>
 #include "analizador.h"
 #define MAXBUFFER 512
+#define TRUE 1
+#define FALSE 0
 
 No* startNo(char *link){
   No *novo = malloc(sizeof(No));
@@ -44,7 +46,9 @@ char* pop(ListaLinks *lista){
     lista->primeiro = temp->proximo;
     lista->quantLinks -= 1;
 
-    if(lista->primeiro == NULL){lista->ultimo = NULL;}
+    if(lista->primeiro == NULL){
+      lista->ultimo = NULL;
+    }
   }
   return link;
 }
@@ -61,8 +65,8 @@ void print_lista(ListaLinks *lista){
 ListaLinks* buscarLinks(char* nome_arquivo){
   FILE *arquivo = fopen(nome_arquivo,"r");
   ListaLinks *lista = startLista();
-  char c = getc(arquivo);
-
+  char c = getc(arquivo), *href = "href";
+  
   while(c != EOF){
     switch (c) {
       case 'h':
@@ -106,8 +110,43 @@ char* pegar_link(FILE *arquivo){
     link[i] = getc(arquivo);
     if(link[i]=='"'){
       link[i] = '\0';
-      break;
+      return link;
     }
   }
-  return link;
+}
+
+int contido_no_dominio(char *link, char *dominio){
+  int contido = FALSE;
+
+  if(link[0] == '/' && link[1] != '/'){
+    contido = TRUE;
+  }
+  else{
+    int len_link = strlen(link), len_dominio = strlen(dominio);
+
+    if(len_link >= len_dominio){
+      char *dominio_link = malloc(len_dominio*sizeof(char));
+      strncpy(dominio_link,link,len_dominio);
+      if(strcmp(dominio_link, dominio) == 0){
+        contido = TRUE;
+      }
+    }
+  }
+  return contido;
+}
+
+ListaLinks* filtrar_lista(ListaLinks *lista, char *dominio){
+  ListaLinks *lista_filtrada = startLista();
+  No *no = lista->primeiro, *temp;
+
+  while(no!=NULL){
+    if(contido_no_dominio(no->link,dominio)){
+      addLista(lista_filtrada,no->link);
+    }
+    temp = no;
+    no = no->proximo;
+    free(temp);
+  }
+  free(lista);
+  return lista_filtrada;
 }
