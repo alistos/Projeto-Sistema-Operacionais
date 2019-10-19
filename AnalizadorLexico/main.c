@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "analizador.c"
+#include "analizador.h"
 
 int main(int argc, char *argv[]) {
   ListaLinks *lista = buscarLinks(argv[1]);
   lista = filtrar_lista(lista,argv[2]);
-  print_lista(lista);
+  salvar_no_arquivo(lista);
+  
   return 0;
 }
