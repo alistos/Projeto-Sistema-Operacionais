@@ -146,7 +146,6 @@ int salvar_no_arquivo(ListaLinks *lista){
   }
 
   char* link = pop(lista);
-
   while(link!=NULL){
     fprintf(arquivo,"%s\n",link);
     link = pop(lista);
