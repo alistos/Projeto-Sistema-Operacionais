@@ -45,7 +45,7 @@ char* pop(ListaLinks *lista){
 
     lista->primeiro = temp->proximo;
     lista->quantLinks -= 1;
-
+    free(temp);
     if(lista->primeiro == NULL){
       lista->ultimo = NULL;
     }
@@ -66,38 +66,26 @@ ListaLinks* buscarLinks(char* nome_arquivo){
   FILE *arquivo = fopen(nome_arquivo,"r");
   ListaLinks *lista = startLista();
   char c = getc(arquivo), *href = "href";
+  int len_href = strlen(href), i;
+  char *string = malloc(len_href*sizeof(char)+1);
   
-  while(c != EOF){
-    switch (c) {
-      case 'h':
-        switch (getc(arquivo)) {
-          case 'r':
-            switch (getc(arquivo)) {
-              case 'e':
-                switch (getc(arquivo)) {
-                  case 'f':
-                    addLista(lista,pegar_link(arquivo));
-                    break;
-                  default:
-                    c = getc(arquivo);
-                    break;
-                }
-                break;
-              default:
-                c = getc(arquivo);
-                break;
-            }
-            break;
-          default:
-            c = getc(arquivo);
-            break;
-        }
-        break;
-      default:
-        c = getc(arquivo);
-        break;
-    }
+  for(i = 0;i<len_href;i++){
+    string[i] = c;
+    c = getc(arquivo);
   }
+  string[i++] = '\0';
+
+  while (c!=EOF){
+    if(strcmp(string,href)==0){
+      addLista(lista,pegar_link(arquivo));
+    }
+    for(i = 0;i<(len_href-1);i++){
+      string[i] = string[i+1];
+    }
+    c = getc(arquivo);
+    string[i] = c;
+  }
+  
   fclose(arquivo);
   return lista;
 }
@@ -122,14 +110,12 @@ int contido_no_dominio(char *link, char *dominio){
     contido = TRUE;
   }
   else{
-    int len_link = strlen(link), len_dominio = strlen(dominio);
+    int len_dominio = strlen(dominio);
+    char *dominio_link = malloc(len_dominio*sizeof(char));
+    strncpy(dominio_link,link,len_dominio);
 
-    if(len_link >= len_dominio){
-      char *dominio_link = malloc(len_dominio*sizeof(char));
-      strncpy(dominio_link,link,len_dominio);
-      if(strcmp(dominio_link, dominio) == 0){
-        contido = TRUE;
-      }
+    if(strstr(link,dominio) != NULL){
+      contido = TRUE;
     }
   }
   return contido;
@@ -149,4 +135,23 @@ ListaLinks* filtrar_lista(ListaLinks *lista, char *dominio){
   }
   free(lista);
   return lista_filtrada;
+}
+
+int salvar_no_arquivo(ListaLinks *lista){
+  FILE *arquivo = fopen("linksEncontrados.txt","a");
+  int status = TRUE;
+
+  if(arquivo == NULL){
+    status = FALSE;
+  }
+
+  char* link = pop(lista);
+  while(link!=NULL){
+    fprintf(arquivo,"%s\n",link);
+    link = pop(lista);
+  }
+
+  free(lista);
+  fclose(arquivo);
+  return status;
 }
