@@ -1,6 +1,6 @@
 # Projeto-Sistema-Operacionais
 Como compilar:
-gcc -o web socketCrawler.c
+gcc -o web main.c
 ./web 000.00.00.000 www.example.com
 
 Componentes necessários para o projeto:
