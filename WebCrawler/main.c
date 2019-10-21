@@ -3,7 +3,7 @@
 #include <string.h> //strlen
 #include <sys/socket.h>
 #include <arpa/inet.h> //inet_addr ou inet_aton
-#include "socketCrawler.c"
+#include "socketCrawler.h"
 #include <unistd.h> //close
 
 int main(int argc, char *argv[]){
