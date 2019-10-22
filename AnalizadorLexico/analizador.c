@@ -154,4 +154,3 @@ int salvar_no_arquivo(ListaLinks *lista){
   free(lista);
   fclose(arquivo);
   return status;
-}
