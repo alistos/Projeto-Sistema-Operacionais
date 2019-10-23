@@ -28,6 +28,7 @@ int main(int argc, char *argv[]){
     lista = filtrar_lista(lista,end);
 
     print_lista(lista);
+    salvar_no_arquivo(lista);
 
     return 0;
 }
