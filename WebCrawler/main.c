@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <string.h> //strlen
 #include <sys/socket.h>
-#include "socketCrawler.c"
+#include "socketCrawler.h"
+#include "analizador.h"
 #include <unistd.h> //close
 #include <netdb.h> //struct addrinfo e função getaddrinfo
 
@@ -13,7 +14,8 @@ int main(int argc, char *argv[]){
     struct addrinfo **pres = &res; 		
     char *end = argv[1]; //endereço do site a ser visitado
     FILE *fp; //arquivo onde será armazenado a resposta do servidor
-    fp = fopen("site.html", "w");
+    char* nome_arquivo_saida = "site.html";
+    fp = fopen(nome_arquivo_saida, "w");
     
     criarServidor(hints, pres, end);
     criarSocket(psock, res);    
@@ -21,6 +23,11 @@ int main(int argc, char *argv[]){
 
     fclose(fp);
     close(sock_desc);
+
+    ListaLinks *lista = buscarLinks(nome_arquivo_saida);
+    lista = filtrar_lista(lista,end);
+
+    print_lista(lista);
 
     return 0;
 }

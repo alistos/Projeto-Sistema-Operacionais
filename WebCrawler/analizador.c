@@ -55,11 +55,10 @@ char* pop(ListaLinks *lista){
 
 void print_lista(ListaLinks *lista){
   No *no = lista->primeiro;
+  printf("============================================\n");
   printf("LINKS ENCONTRADOS: %d\n", lista->quantLinks);
-  while(no!=NULL){
-    printf("%s\n",no->link);
-    no = no->proximo;
-  }
+  printf("============================================\n");
+
 }
 
 ListaLinks* buscarLinks(char* nome_arquivo){
