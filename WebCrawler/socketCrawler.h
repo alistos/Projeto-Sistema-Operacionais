@@ -1,3 +1,6 @@
+#ifndef SOCKETCRAWLER_H
+#define SOCKETCRAWLER_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h> //strlen
@@ -9,3 +12,4 @@ int criarSocket(int *sock_desc, struct addrinfo *res);
 void conversarServidor(int sock_desc, struct addrinfo *res, char *endereco, FILE *fp);
 void conectarServidor(int sock_desc, struct addrinfo *res, char *endereco, FILE *fp);
 
+#endif
