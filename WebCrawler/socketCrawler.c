@@ -87,3 +87,20 @@ void conectarServidor(int sock_desc, struct addrinfo *res, char *endereco, FILE 
     conversarServidor(sock_desc, res, endereco, fp);
 
 }
+
+int salvar_link_visitado(char *link){
+    FILE *arquivo = fopen("linksVisitados.txt","a");
+    int status = TRUE;
+
+    printf("============================================\n");  
+    if(arquivo == NULL){
+        printf("ERRO AO ADICIONAR LINK NO ARQUIVO!!!\n");
+        status = FALSE;
+    }else{
+        fprintf(arquivo,"%s\n", link);  
+        fclose(arquivo);      
+        printf("LINK: %s VISITADO!!!\n", link);
+    }
+    printf("============================================\n");    
+    return status;
+}

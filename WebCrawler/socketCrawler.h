@@ -11,5 +11,6 @@ struct addrinfo criarServidor(struct addrinfo hints, struct addrinfo **res, char
 int criarSocket(int *sock_desc, struct addrinfo *res);
 void conversarServidor(int sock_desc, struct addrinfo *res, char *endereco, FILE *fp);
 void conectarServidor(int sock_desc, struct addrinfo *res, char *endereco, FILE *fp);
+int salvar_links_econtrados(char *link);
 
 #endif
