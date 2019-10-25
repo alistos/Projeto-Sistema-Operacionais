@@ -135,7 +135,7 @@ ListaLinks* filtrar_lista(ListaLinks *lista, char *dominio){
   return lista_filtrada;
 }
 
-int salvar_no_arquivo(ListaLinks *lista){
+int salvar_links_econtrados(ListaLinks *lista){
   FILE *arquivo = fopen("linksEncontrados.txt","a");
   int status = TRUE, quantLinks = lista->quantLinks;
   
@@ -145,7 +145,7 @@ int salvar_no_arquivo(ListaLinks *lista){
 
   char* link = pop(lista);
   while(link!=NULL){
-    fprintf(arquivo,"%s\n",link);
+    fprintf(arquivo,"%s\n", link);
     link = pop(lista);
   }
 
@@ -153,10 +153,9 @@ int salvar_no_arquivo(ListaLinks *lista){
   fclose(arquivo);
   printf("============================================\n");
   if(status){
-    printf("%d LINKS ADICIONADOS NO ARQUIVO!!!\n",quantLinks);
+    printf("%d LINKS ADICIONADOS NO ARQUIVO!!!\n", quantLinks);
   }else{
     printf("ERRO AO ADICIONAR LINKS NO ARQUIVO!!!\n");
-
   }
   printf("============================================\n");
   return status;
