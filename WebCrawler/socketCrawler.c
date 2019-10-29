@@ -5,9 +5,8 @@
 #include <sys/socket.h>
 #include <netdb.h> //struct addrinfo e função getaddrinfo
 #include "socketCrawler.h"
-
-
-
+#define TRUE 1
+#define FALSE 0
 
 //definir a estrutura do socket servidor
 struct addrinfo criarServidor(struct addrinfo hints, struct addrinfo **res, char *endereco){
@@ -103,4 +102,21 @@ int salvar_link_visitado(char *link){
     }
     printf("============================================\n");    
     return status;
+}
+
+int *baixar_pagina(char *endereco, char* nome_arquivo_saida){
+    int sock_desc; //descritor do socket
+    int *psock = &sock_desc;
+    struct addrinfo hints, *res;
+    struct addrinfo **pres = &res;
+
+    FILE *fp; //arquivo onde será armazenado a resposta do servidor
+    fp = fopen(nome_arquivo_saida, "w");
+
+    criarServidor(hints, pres, endereco);
+    criarSocket(psock, res);    
+    conectarServidor(sock_desc,res,endereco,fp);
+
+    fclose(fp);
+    close(sock_desc);
 }
