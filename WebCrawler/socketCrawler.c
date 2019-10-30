@@ -4,9 +4,11 @@
 #include <unistd.h> //close
 #include <sys/socket.h>
 #include <netdb.h> //struct addrinfo e função getaddrinfo
+#include <pthread.h>
 #include "socketCrawler.h"
 #define TRUE 1
 #define FALSE 0
+#define LENBUFFER 312
 
 //definir a estrutura do socket servidor
 struct addrinfo criarServidor(struct addrinfo hints, struct addrinfo **res, char *endereco){
@@ -34,8 +36,8 @@ int criarSocket(int *sock_desc, struct addrinfo *res){
     return *sock_desc;
 }
 
-void conversarServidor(int sock_desc, struct addrinfo *res, char *endereco, FILE *fp){
-    char msg[100]; //msg = mensagem que será enviada ao servidor
+void conversarServidor(int sock_desc, struct addrinfo *res, char *endereco, char *subEndereco, FILE *fp){
+    char msg[512]; //msg = mensagem que será enviada ao servidor
     char resp_servidor[1024]; //variável que irá receber a resposta do servidor
     int bytes_read; //variável de suporte para capturar a resposta do servidor
 
@@ -44,7 +46,14 @@ void conversarServidor(int sock_desc, struct addrinfo *res, char *endereco, FILE
     //index.html fica subentendido quando não se coloca nada após o primeiro /
     //Host: precisa ser especificado pois vários endereços podem utilizar o mesmo servidor ip
     //Connection: close simplesmente fecha a conexão após a resposta do servidor ser enviada
-    strcpy(msg, "GET / HTTP/1.1\nHost: ");
+    if(subEndereco == NULL){
+        strcpy(msg, "GET / HTTP/1.1\nHost: ");
+    }else{
+        strcpy(msg, "GET ");
+        strcat(msg, subEndereco);
+        strcat(msg, " HTTP/1.1\nHost: ");
+    }
+    
     strcat(msg, endereco);
     strcat(msg, "\r\nConnection: close\n\n");
     printf("%s\n",msg);
@@ -72,7 +81,7 @@ void conversarServidor(int sock_desc, struct addrinfo *res, char *endereco, FILE
 }
 
 //Conectar a um servidor remoto e conversar com ele
-void conectarServidor(int sock_desc, struct addrinfo *res, char *endereco, FILE *fp){
+void conectarServidor(int sock_desc, struct addrinfo *res, char *endereco, char *subEndereco, FILE *fp){
     //connect(descritor do socket, struct do servidor, tamanho do servidor
     if(connect(sock_desc , res->ai_addr , res->ai_addrlen) < 0){
         printf("Nao foi possivel estabelecer a conexao!");
@@ -83,8 +92,7 @@ void conectarServidor(int sock_desc, struct addrinfo *res, char *endereco, FILE 
     }
 
     freeaddrinfo(res);
-    conversarServidor(sock_desc, res, endereco, fp);
-
+    conversarServidor(sock_desc, res, endereco, subEndereco, fp);
 }
 
 int salvar_link_visitado(char *link){
@@ -104,19 +112,57 @@ int salvar_link_visitado(char *link){
     return status;
 }
 
-int *baixar_pagina(char *endereco, char* nome_arquivo_saida){
+void *baixar_pagina(void *args){
+
+    Arg_download *arg = (Arg_download*)args;
+
     int sock_desc; //descritor do socket
     int *psock = &sock_desc;
     struct addrinfo hints, *res;
     struct addrinfo **pres = &res;
 
     FILE *fp; //arquivo onde será armazenado a resposta do servidor
-    fp = fopen(nome_arquivo_saida, "w");
+    fp = fopen(arg->nome_arquivo_saida, "w");
 
-    criarServidor(hints, pres, endereco);
+    criarServidor(hints, pres, arg->endereco);
     criarSocket(psock, res);    
-    conectarServidor(sock_desc,res,endereco,fp);
+    conectarServidor(sock_desc, res, arg->endereco, arg->subEndereco, fp);
 
     fclose(fp);
     close(sock_desc);
+}
+
+void percorrer_links(char* dominio){
+    char *buffer_link = malloc(LENBUFFER*sizeof(char));
+    char *nome_arquivo_saida = malloc(LENBUFFER*sizeof(char)), *temp = malloc(LENBUFFER*sizeof(char));
+    int contador = 1;
+    FILE *arquivoLinks = fopen("linksEncontrados.txt","r");
+
+    if(arquivoLinks != NULL){
+        while(fgets(buffer_link,LENBUFFER, arquivoLinks) != NULL){
+            buffer_link[strlen(buffer_link)-1] = '\0';
+            snprintf(temp, 10, "%d", contador);//converte int em string
+
+            strcpy(nome_arquivo_saida,dominio);
+            strcat(nome_arquivo_saida,temp);
+            strcat(nome_arquivo_saida,".html");
+
+            Arg_download *args = start_arg(dominio, buffer_link, nome_arquivo_saida);
+            pthread_t thread;
+            pthread_create(&thread,NULL,baixar_pagina,(void*)args);
+            pthread_join(thread,NULL);
+            contador++;
+        }
+        fclose(arquivoLinks);
+    }
+}
+
+Arg_download* start_arg(char *endereco, char *subEndereco, char* nome_arquivo_saida){
+    Arg_download *arg = malloc(sizeof(Arg_download));
+    
+    arg->endereco = endereco;
+    arg->subEndereco = subEndereco;
+    arg->nome_arquivo_saida = nome_arquivo_saida;
+
+    return arg;
 }
