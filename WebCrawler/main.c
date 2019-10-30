@@ -8,27 +8,21 @@
 #include <netdb.h> //struct addrinfo e função getaddrinfo
 
 int main(int argc, char *argv[]){
-    int sock_desc; //descritor do socket
-    int *psock = &sock_desc;
-    struct addrinfo hints, *res;
-    struct addrinfo **pres = &res; 		
+     		
     char *end = argv[1]; //endereço do site a ser visitado
-    FILE *fp; //arquivo onde será armazenado a resposta do servidor
     char* nome_arquivo_saida = "site.html";
-    fp = fopen(nome_arquivo_saida, "w");
     
-    criarServidor(hints, pres, end);
-    criarSocket(psock, res);    
-    conectarServidor(sock_desc,res,end,fp);
+    Arg_download *arg_site = start_arg(end, NULL,nome_arquivo_saida);
 
-    fclose(fp);
-    close(sock_desc);
-
-    ListaLinks *lista = buscarLinks(nome_arquivo_saida);
-    lista = filtrar_lista(lista,end);
+    pthread_t thread;
+    pthread_create(&thread,NULL,baixar_pagina,(void*)arg_site);
+    pthread_join(thread,NULL);
+            
+    ListaLinks *lista = filtrar_lista(buscarLinks(nome_arquivo_saida),end);
 
     print_lista(lista);
-    salvar_no_arquivo(lista);
+    salvar_links_econtrados(lista);
+    percorrer_links(end);
 
     return 0;
 }
