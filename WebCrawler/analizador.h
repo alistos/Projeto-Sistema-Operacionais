@@ -24,6 +24,6 @@ ListaLinks* buscarLinks(char* arquivo);
 char* pegar_link(FILE *arquivo);
 int contido_no_dominio(char *link,char *dominio);
 ListaLinks* filtrar_lista(ListaLinks *lista, char *dominio);
-int salvar_no_arquivo(ListaLinks *lista);
+int salvar_links_econtrados(ListaLinks *lista);
 
 #endif
