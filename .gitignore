@@ -2,3 +2,9 @@
 .idea/*
 *.html
 *.txt
+*.o
+*.run
+*.deb
+*.jpeg
+*.mp4
+*.mp3
