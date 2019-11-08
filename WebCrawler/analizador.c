@@ -23,6 +23,14 @@ ListaLinks* startLista(){
   return lista;
 }
 
+void free_lista(ListaLinks *lista){
+  char *link = pop(lista);
+  while (link != NULL){
+    free(link);
+  }
+  free(lista);
+}
+
 void addLista(ListaLinks* lista, char* link){
   No *novo = startNo(link);
   if(lista->primeiro == NULL){
@@ -135,8 +143,11 @@ ListaLinks* filtrar_lista(ListaLinks *lista, char *dominio){
   return lista_filtrada;
 }
 
-int salvar_links_econtrados(ListaLinks *lista){
-  FILE *arquivo = fopen("linksEncontrados.txt","a");
+int salvar_links_econtrados(ListaLinks *lista, char *dominio){
+  char *file_name = "linksEncontrados.txt", *path = get_path(dominio, file_name);
+
+  FILE *arquivo = fopen(path,"a");
+  
   int status = TRUE, quantLinks = lista->quantLinks;
   
   if(arquivo == NULL){
@@ -151,6 +162,7 @@ int salvar_links_econtrados(ListaLinks *lista){
 
   free(lista);
   fclose(arquivo);
+
   printf("============================================\n");
   if(status){
     printf("%d LINKS ADICIONADOS NO ARQUIVO!!!\n", quantLinks);
@@ -158,5 +170,16 @@ int salvar_links_econtrados(ListaLinks *lista){
     printf("ERRO AO ADICIONAR LINKS NO ARQUIVO!!!\n");
   }
   printf("============================================\n");
+
   return status;
+}
+
+char* get_path(char *dominio, char *file_name){
+    char *path = malloc(MAXBUFFER*sizeof(char));
+
+    strcpy(path, dominio);
+    strcat(path, "/");
+    strcat(path, file_name);
+
+    return path;
 }
