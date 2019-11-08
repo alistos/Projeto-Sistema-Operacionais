@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <netdb.h> //struct addrinfo e função getaddrinfo
 #include <pthread.h>
+#include <sys/stat.h>
 #include "socketCrawler.h"
 #define TRUE 1
 #define FALSE 0
@@ -121,8 +122,13 @@ void *baixar_pagina(void *args){
     struct addrinfo hints, *res;
     struct addrinfo **pres = &res;
 
+    char path[LENBUFFER];
+    strcpy(path, arg->endereco);
+    strcat(path, "/");
+    strcat(path, arg->nome_arquivo_saida);
+
     FILE *fp; //arquivo onde será armazenado a resposta do servidor
-    fp = fopen(arg->nome_arquivo_saida, "w");
+    fp = fopen(path, "w");
 
     criarServidor(hints, pres, arg->endereco);
     criarSocket(psock, res);    
@@ -165,4 +171,16 @@ Arg_download* start_arg(char *endereco, char *subEndereco, char* nome_arquivo_sa
     arg->nome_arquivo_saida = nome_arquivo_saida;
 
     return arg;
+}
+
+void criar_pasta_dominio(char *dominio){
+    int result = mkdir(dominio, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    // Caso a pasta seja criada o retorno será 0(zero).
+    printf("============================================\n");  
+    if(!result){
+        printf("DIRETORIO %s CRIADO COM SUCESSO!!!\n",dominio);
+    }else{
+        printf("FALHA AO CRIAR DIRETORIO!!!\n");
+    }
+    printf("============================================\n");
 }

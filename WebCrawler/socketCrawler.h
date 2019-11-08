@@ -22,5 +22,6 @@ void conectarServidor(int sock_desc, struct addrinfo *res, char *endereco, char 
 int salvar_link_visitado(char *link);
 void *baixar_pagina(void *args);
 void percorrer_links(char* dominio);
+void criar_pasta_dominio(char *dominio);
 
 #endif
