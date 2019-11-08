@@ -15,6 +15,5 @@ int main(int argc, char *argv[]){
         pthread_create(&thread,NULL,percorrer_dominio,(void*)argv[i]);
         pthread_join(thread,NULL);
     }
-
     return 0;
 }
