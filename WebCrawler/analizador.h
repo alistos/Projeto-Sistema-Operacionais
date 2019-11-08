@@ -17,6 +17,7 @@ typedef struct listaLinks{
 
 No* startNo(char *link);
 ListaLinks* startLista();
+void free_lista(ListaLinks *lista);
 void addLista(ListaLinks *lista, char* link);
 char* pop(ListaLinks *lista);
 void print_lista(ListaLinks *lista);
@@ -24,6 +25,7 @@ ListaLinks* buscarLinks(char* arquivo);
 char* pegar_link(FILE *arquivo);
 int contido_no_dominio(char *link,char *dominio);
 ListaLinks* filtrar_lista(ListaLinks *lista, char *dominio);
-int salvar_links_econtrados(ListaLinks *lista);
+int salvar_links_econtrados(ListaLinks *lista, char *dominio);
+char* get_path(char *dominio, char *file_name);
 
 #endif

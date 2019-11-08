@@ -6,23 +6,15 @@
 #include "analizador.h"
 #include <unistd.h> //close
 #include <netdb.h> //struct addrinfo e função getaddrinfo
+#define LEN_BUFFER 312
 
 int main(int argc, char *argv[]){
-     		
-    char *end = argv[1]; //endereço do site a ser visitado
-    char* nome_arquivo_saida = "site.html";
-    
-    Arg_download *arg_site = start_arg(end, NULL,nome_arquivo_saida);
 
-    pthread_t thread;
-    pthread_create(&thread,NULL,baixar_pagina,(void*)arg_site);
-    pthread_join(thread,NULL);
-            
-    ListaLinks *lista = filtrar_lista(buscarLinks(nome_arquivo_saida),end);
-
-    print_lista(lista);
-    salvar_links_econtrados(lista);
-    percorrer_links(end);
+    for(int i = 1 ; i<argc ; i++){
+        pthread_t thread;
+        pthread_create(&thread,NULL,percorrer_dominio,(void*)argv[i]);
+        pthread_join(thread,NULL);
+    }
 
     return 0;
 }
