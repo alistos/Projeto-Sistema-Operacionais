@@ -1,7 +1,7 @@
 # Projeto-Sistema-Operacionais
 Como compilar:
-gcc -o web main.c
-./web 000.00.00.000 www.example.com
+gcc *.c -o web.o -pthread
+./web.o www.example.com
 
 Componentes necessários para o projeto:
 
