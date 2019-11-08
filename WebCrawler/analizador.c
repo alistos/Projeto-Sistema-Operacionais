@@ -23,6 +23,14 @@ ListaLinks* startLista(){
   return lista;
 }
 
+void free_lista(ListaLinks *lista){
+  char *link = pop(lista);
+  while (link != NULL){
+    free(link);
+  }
+  free(lista);
+}
+
 void addLista(ListaLinks* lista, char* link){
   No *novo = startNo(link);
   if(lista->primeiro == NULL){

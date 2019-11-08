@@ -17,6 +17,7 @@ typedef struct listaLinks{
 
 No* startNo(char *link);
 ListaLinks* startLista();
+void free_lista(ListaLinks *lista);
 void addLista(ListaLinks *lista, char* link);
 char* pop(ListaLinks *lista);
 void print_lista(ListaLinks *lista);
