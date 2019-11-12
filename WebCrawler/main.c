@@ -11,6 +11,13 @@
 int main(int argc, char *argv[]){
     char *tipo_arquivo = argv[1];
 
+    if(argc < 3){
+        printf("ARGUMENTO INSUFICIENTES!!!\n");
+        printf("USO CORRETO => ./web.o tipo_de_arquivo dominio1 dominio2  dominio...\n");
+        printf("EXEMPLO     => ./web.o gif www.exemplo.com www.exemplo2.com\n");
+        return 0;
+    }
+
     for(int i = 2 ; i<argc ; i++){
         char *dominio = argv[i];
         Arg_percorrer_dominio *args = start_arg_dominio(dominio,tipo_arquivo);
