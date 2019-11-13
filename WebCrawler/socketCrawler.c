@@ -142,13 +142,11 @@ int link_visitado(char *link, char *dominio){
     ListaLinks *lista = listar_links_visitados(dominio);
     char *link_lista = pop(lista);
     
-    while (link_lista != NULL & boolean != TRUE){
+    while (link_lista != NULL && boolean != TRUE){
         if(strcmp(link, link_lista) == 0){//funcao strcmp retorna 0(zero) quando as strings iguais
             boolean = TRUE;
         }
-        else{
-            link_lista = pop(lista);
-        }
+        link_lista = pop(lista);    
     }
     
     free_lista(lista);
@@ -176,8 +174,6 @@ void *baixar_pagina(void *args){
 
     fclose(fp);
     close(sock_desc);
-
-    buscarLinks(path);//percorre a pagina recem baixada para encontrar mais links
 }
 
 void percorrer_links(char* dominio, char* tipo_arquivo){
@@ -205,6 +201,7 @@ void percorrer_links(char* dominio, char* tipo_arquivo){
                 buscar_links_de_arquivo(dominio, tipo_arquivo);
             
                 salvar_link_visitado(buffer_link, dominio);
+                buscarLinks(get_path(dominio,nome_arquivo_saida));//percorre a pagina recem baixada para encontrar mais links
             }
         }
         fclose(arquivoLinks);
