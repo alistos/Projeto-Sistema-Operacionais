@@ -15,7 +15,7 @@ int main(int argc, char *argv[]){
         printf("ARGUMENTO INSUFICIENTES!!!\n");
         printf("USO CORRETO => ./web.o tipo_de_arquivo dominio1 dominio2  dominio...\n");
         printf("EXEMPLO     => ./web.o gif www.exemplo.com www.exemplo2.com\n");
-        return 0;
+        return 1;
     }
 
     for(int i = 2 ; i<argc ; i++){
@@ -23,6 +23,15 @@ int main(int argc, char *argv[]){
         Arg_percorrer_dominio *args = start_arg_dominio(dominio,tipo_arquivo);
         pthread_t thread;
         pthread_create(&thread,NULL,percorrer_dominio,(void*)args);
+        pthread_join(thread,NULL);
+    }
+
+    for(int j = 0 ; j<argc ; j++){
+        char *dominio = argv[j];
+        Arg_statistica *args = start_arg_statistica(dominio, tipo_arquivo);
+
+        pthread_t thread;
+        pthread_create(&thread,NULL,exibir_statisticas,(void*)args);
         pthread_join(thread,NULL);
     }
 

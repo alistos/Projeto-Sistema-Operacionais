@@ -198,7 +198,6 @@ void percorrer_links(char* dominio, char* tipo_arquivo){
                 pthread_create(&thread,NULL,baixar_pagina,(void*)args);
                 pthread_join(thread,NULL);
                 contador++;
-                buscar_links_de_arquivo(dominio, tipo_arquivo);
             
                 salvar_link_visitado(buffer_link, dominio);
                 buscarLinks(get_path(dominio,nome_arquivo_saida));//percorre a pagina recem baixada para encontrar mais links
@@ -255,4 +254,19 @@ Arg_percorrer_dominio* start_arg_dominio(char *dominio, char *tipo_arquivo){
     Arg_percorrer_dominio *arg = malloc(sizeof(Arg_percorrer_dominio));
     arg->dominio = dominio;
     arg->tipo_arquivo = tipo_arquivo;
+    return arg;
+}
+
+Arg_statistica* start_arg_statistica(char *dominio, char *tipo_arquivo){
+    Arg_statistica* arg = malloc(sizeof(Arg_statistica));
+    arg->dominio = dominio;
+    arg->tipo_arquivo = tipo_arquivo;
+    
+    return arg;
+}
+
+void *exibir_statisticas(void *args){
+    Arg_statistica* arg = (Arg_statistica*)args;
+    char *str = buscar_links_de_arquivo(arg->dominio, arg->tipo_arquivo);
+    printf("%s",str);
 }

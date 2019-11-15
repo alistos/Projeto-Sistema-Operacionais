@@ -184,7 +184,7 @@ char* get_path(char *dominio, char *file_name){
     return path;
 }
 
-void buscar_links_de_arquivo(char *dominio, char *tipo_arquivo){
+char* buscar_links_de_arquivo(char *dominio, char *tipo_arquivo){
   char *file_name = "linksEncontrados.txt",
        *path = get_path(dominio,file_name),
        *buffer_link = malloc(MAXBUFFER*sizeof(char));
@@ -201,12 +201,22 @@ void buscar_links_de_arquivo(char *dominio, char *tipo_arquivo){
     fclose(arquivo);
   }
   
-  char *link_temp = pop(lista);
-  printf("==================== LINKS %s ===========================\n",tipo_arquivo);
-  print_lista(lista);
+  char *link_temp = pop(lista), *temp;
+  char *str = "==================== LINKS %s ===========================\n";
+  int contagem_links = lista->quantLinks;
+
   while(link_temp != NULL){
-    printf("%s\n",link_temp);
+    strcat(str, "->");
+    strcat(str, link_temp);
+    strcat(str, "\n");
+
     link_temp = pop(lista);
   }
-  printf("==========================================================\n");
+  snprintf(temp, 10, "%d", contagem_links);//converte int em string
+
+  strcat(str, "LINKS ENCONTRADOS : ");
+  strcat(str, temp);
+  strcat(str, "\n==========================================================\n");
+  
+  return str;
 }
