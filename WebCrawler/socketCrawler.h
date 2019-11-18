@@ -25,10 +25,10 @@ typedef struct arg_download_pagina{
 Arg_download* start_arg(char *endereco, char *subEndereco, char* nome_arquivo_saida);
 struct addrinfo criarServidor(struct addrinfo hints, struct addrinfo **res, char *endereco);
 int criarSocket(int *sock_desc, struct addrinfo *res);
-int criarSocketSSL(int *sock_desc, BIO *bioSaida);
-int conexaoSSL();
 void conversarServidor(int sock_desc, struct addrinfo *res, char *endereco, char *subEndereco, FILE *fp);
 void conectarServidor(int sock_desc, struct addrinfo *res, char *endereco, char *subEndereco, FILE *fp);
+int criarServSockSSL(int *sock_desc, char *endereco);
+void conectarServidorSSL(int *sock_desc,char *endereco, char *subEndereco);
 int salvar_link_visitado(char *link, char *dominio);
 ListaLinks* listar_links_visitados(char *dominio);
 int link_visitado(char *link, char *dominio);

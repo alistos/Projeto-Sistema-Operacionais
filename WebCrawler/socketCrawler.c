@@ -3,6 +3,8 @@
 #include <string.h> //strlen
 #include <unistd.h> //close
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <netdb.h> //struct addrinfo e função getaddrinfo
 #include <pthread.h>
 #include <sys/stat.h>
@@ -72,21 +74,28 @@ void conversarServidor(int sock_desc, struct addrinfo *res, char *endereco, char
     else{
         printf("Os dados foram enviados com sucesso!\n");
     }
-
+  
     //Receber resposta do servidor
     //recv(descritor do socket, variável onde será armazenada a resposta do servidor, tamanho da variável, flags, padrão 0)
     //do while usado para que enquanto a resposta do servidor não for completamente capturada, continuar pegando o que falta
     do{
         bytes_read = recv(sock_desc, resp_servidor, 1024, 0);
-
-        if(bytes_read == -1){
+	if(bytes_read == -1){
             perror("recv");
         }
         else{
-            fprintf(fp, "%.*s", bytes_read, resp_servidor);
+            fprintf(fp, "%.*s", bytes_read, resp_servidor);        
         }
     } while(bytes_read > 0);
     printf("%s\n",resp_servidor);
+    //Checa se houve um erro de HTTPS, caso sim, tenta realizar uma conexão https agora
+    if(resp_servidor[9] == '3'){
+        printf("ERRO DE LOCAL\n\n");
+	int sockSSL_desc; //descritor do socket
+        int *psock = &sockSSL_desc;
+	criarServSockSSL(psock, endereco);
+	conectarServidorSSL(psock, endereco, subEndereco);
+     }
 }
 
 //Conectar a um servidor remoto e conversar com ele
@@ -236,7 +245,7 @@ void conectarServidorSSL(int *sock_desc,char *endereco, char *subEndereco){
     //index.html fica subentendido quando não se coloca nada após o primeiro /
     //Host: precisa ser especificado pois vários endereços podem utilizar o mesmo servidor ip
     //Connection: close simplesmente fecha a conexão após a resposta do servidor ser enviada
-    char *subEndereco = NULL;
+    //char *subEndereco = NULL;
     if(subEndereco == NULL){
         strcpy(msg, "GET / HTTP/1.1\nHost: ");
     }else{

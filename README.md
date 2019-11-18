@@ -1,16 +1,8 @@
 # Projeto-Sistema-Operacionais
 Como compilar:
-gcc *.c -o web.o -pthread
+gcc *.c -o web.o -pthread -lssl -lcrypto
 ./web.o www.example.com
 
-Componentes necessários para o projeto:
-
-1. Socket - 
-
-2. código para efetuar downloads -
-
-3. Threads - 
-
-4. Web Crawler -
+Detalhe: Alguns sites precisam ser chamados no terminal sem o www para funcionar corretamente, exemplo, kotaku.com precisa ser chamado dessa forma, e não www.kotaku.com
 
 
