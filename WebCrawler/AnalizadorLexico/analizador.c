@@ -183,3 +183,30 @@ char* get_path(char *dominio, char *file_name){
 
     return path;
 }
+
+void buscar_links_de_arquivo(char *dominio, char *tipo_arquivo){
+  char *file_name = "linksEncontrados.txt",
+       *path = get_path(dominio,file_name),
+       *buffer_link = malloc(MAXBUFFER*sizeof(char));
+  
+  ListaLinks *lista = startLista();
+  FILE *arquivo = fopen(path, "r");
+
+  if(arquivo!=NULL){
+    while(fgets(buffer_link, MAXBUFFER, arquivo) != NULL){
+      if(strstr(buffer_link, tipo_arquivo) != NULL){
+        addLista(lista, buffer_link);
+      }
+    }
+    fclose(arquivo);
+  }
+  
+  char *link_temp = pop(lista);
+  printf("==================== LINKS %s ===========================\n",tipo_arquivo);
+  print_lista(lista);
+  while(link_temp != NULL){
+    printf("%s\n",link_temp);
+    link_temp = pop(lista);
+  }
+  printf("==========================================================\n");
+}

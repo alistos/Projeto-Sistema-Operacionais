@@ -311,14 +311,17 @@ ListaLinks* listar_links_visitados(char *dominio){
     ListaLinks *lista = startLista();
     char *buffer_link = malloc(LENBUFFER*sizeof(char));
     char *file_name = "linksVisitados.txt", *path = get_path(dominio, file_name);
-
+    int fim;
     FILE *arquivo = fopen(path,"a");
     
     if(arquivo != NULL){
         while(fgets(buffer_link, LENBUFFER, arquivo) != NULL){
+            fim = strlen(buffer_link)-1;
+            buffer_link[fim] = '\0';
             addLista(lista, buffer_link);
             buffer_link = malloc(LENBUFFER*sizeof(char));
         }
+
         fclose(arquivo);
     }
 
@@ -364,16 +367,17 @@ void *baixar_pagina(void *args){
 
     fclose(fp);
     close(sock_desc);
+
+    buscarLinks(path);//percorre a pagina recem baixada para encontrar mais links
 }
 
-void percorrer_links(char* dominio){
+void percorrer_links(char* dominio, char* tipo_arquivo){
     char *buffer_link = malloc(LENBUFFER*sizeof(char));
     char *nome_arquivo_saida = malloc(LENBUFFER*sizeof(char)), *temp = malloc(LENBUFFER*sizeof(char));
     char *arq_links = "linksEncontrados.txt", *path = get_path(dominio, arq_links);
     int contador = 1;
 
     FILE *arquivoLinks = fopen(path,"r");
-
     if(arquivoLinks != NULL){
         while(fgets(buffer_link, LENBUFFER, arquivoLinks) != NULL){
             if(!link_visitado(buffer_link, dominio)){
@@ -389,7 +393,8 @@ void percorrer_links(char* dominio){
                 pthread_create(&thread,NULL,baixar_pagina,(void*)args);
                 pthread_join(thread,NULL);
                 contador++;
-                
+                buscar_links_de_arquivo(dominio, tipo_arquivo);
+            
                 salvar_link_visitado(buffer_link, dominio);
             }
         }
@@ -419,10 +424,10 @@ void criar_pasta_dominio(char *dominio){
     printf("============================================\n");
 }
 
-void *percorrer_dominio(void *dominio){
-    char *end = (char*)dominio; //endereço do site a ser visitado
+void *percorrer_dominio(void *args){
+    Arg_percorrer_dominio *arg = (Arg_percorrer_dominio*)args;
+    char *end = arg->dominio; //endereço do site a ser visitado
     char* nome_arquivo_saida = "site.html";
-
     char *path = get_path(end, nome_arquivo_saida);
 
     criar_pasta_dominio(end);
@@ -437,5 +442,11 @@ void *percorrer_dominio(void *dominio){
 
     print_lista(lista);
     salvar_links_econtrados(lista,end);
-    percorrer_links(end);
+    percorrer_links(end,arg->tipo_arquivo);
+}
+
+Arg_percorrer_dominio* start_arg_dominio(char *dominio, char *tipo_arquivo){
+    Arg_percorrer_dominio *arg = malloc(sizeof(Arg_percorrer_dominio));
+    arg->dominio = dominio;
+    arg->tipo_arquivo = tipo_arquivo;
 }
