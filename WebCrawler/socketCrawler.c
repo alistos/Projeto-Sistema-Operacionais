@@ -106,20 +106,25 @@ void conectarServidor(int sock_desc, struct addrinfo *res, char *endereco, char 
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 //definir a estrutura do socket servidor SSL
-struct addrinfo criarServidorSSL(struct addrinfo hints, struct addrinfo **res, char *endereco){
+int criarServSockSSL(int *sock_desc, char *endereco){
+    //É necessário concatenar o endereco recebido com https:// para que se possa capturar o endereco
+    //https de forma correta
     char end[500] = "https://";
     strcat(end, endereco);
-
-    /*
-    ###################################################################################
-    ###################################################################################
     char protocolo[10] = "";
-    char host[500] = "";
+    char nomeHost[500] = "";
+    //O port padrão para conexões https é 443, ao contrário do port 80 para conexões http
+    char numPort[10] = "443";
     int port;
     char *pointer = NULL;
+    struct hostent *host;
+    struct sockaddr_in dest_addr;
+
+    //As instruções abaixo estão sendo realizadas para modificar a string do endereco de forma que ele 
+    //seja usado de forma correta pelas funções que criarão o socket
 
     //remove o / no final do link caso exista
-    if(end[strle(end)] == '/'){
+    if(end[strlen(end)] == '/'){
         end[strlen(end)] = '\0';
     }
 
@@ -127,55 +132,44 @@ struct addrinfo criarServidorSSL(struct addrinfo hints, struct addrinfo **res, c
     strncpy(protocolo, end, (strchr(end, ':')-end));
 
     //O hostname começa após o ://
-    strncpy(host, strstr(url_str, "://")+3, sizeof(host));
+    strncpy(nomeHost, strstr(end, "://")+3, sizeof(nomeHost));
 
     //Se o host possui um :, capturar o port
-    if(strchr(host, ':')){
-        pointer = strchr(host, ':');
+    if(strchr(nomeHost, ':')){
+        pointer = strchr(nomeHost, ':');
         //O ultimo : começa o port
-        strcnpy(port, pointer+1, sizeof(port));
+        strncpy(numPort, pointer+1, sizeof(numPort));
         *pointer = '\0';
     }
 
-    port = atoi(port);
+    port = atoi(numPort);
 
-    if((host = gethostbyname(host)) == NULL){
-        BIO_printf(outbio, "Não foi possivel capturar o host %s.\n", host);
-        abort();
-    }
-    ###################################################################################
-    ###################################################################################
-    */
-
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-    if(getaddrinfo(end, "443", &hints, res)!=0){
-        perror("getaddrinfo");
+    if((host = gethostbyname(nomeHost)) == NULL){
+       printf("Não foi possivel capturar o host %s.\n", nomeHost);
     }
 
-
-    return **res;
-}
-
-//Criar o socket SSL
-//socket(dominio, tipo de socket, protocolo)
-//AF_INET = ipv4, SOCK_STREAM = TCP, protocolo 0 é o padrão
-int criarSocketSSL(int *sock_desc, struct addrinfo *res, char *endereco, BIO *bioSaida){
-    *sock_desc = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+    *sock_desc = socket(AF_INET, SOCK_STREAM, 0);
     if(*sock_desc == -1){
         printf("Nao foi possivel criar o socket!");
         return *sock_desc;
+    }
+
+    dest_addr.sin_family = AF_INET;
+    dest_addr.sin_port = htons(port);
+    dest_addr.sin_addr.s_addr = *(long*)(host->h_addr);
+
+    memset(&(dest_addr.sin_zero), '\0', 8);
+    pointer = inet_ntoa(dest_addr.sin_addr);
+
+    if(connect(*sock_desc, (struct sockaddr *)&dest_addr, sizeof(struct sockaddr)) == -1){
+        printf("Erro, nao foi possivel conectar-se ao host");
     }  
     return *sock_desc;
 }
 
-int conectarServidorSSL(int *sock_desc,struct addrinfo *res,char *endereco,char *subEndereco,FILE *fp){
+void conectarServidorSSL(int *sock_desc,char *endereco, char *subEndereco){
     BIO *bioSaida = NULL;
-    BIO *bioCertificado = NULL;
     BIO *web;
-    X509 *certificado = NULL;
-    X509_NAME *nomeCerificado = NULL;
     const SSL_METHOD *method;
     SSL_CTX *ctx;
     SSL *ssl;
@@ -217,36 +211,20 @@ int conectarServidorSSL(int *sock_desc,struct addrinfo *res,char *endereco,char 
     web = BIO_new_ssl_connect(ctx);
     BIO_get_ssl(web, &ssl);
 
-	
-    /*
-    ###################################################################################
-    ###################################################################################
+
     //Cria a conexão TCP
-    servidor = criarSocketSSL(hints, pres, res->ai_ddr);
+    servidor = criarServSockSSL(sock_desc, endereco);
     if(servidor == 0){
-        BIO_printf(outbio, "Não foi possível criar a conexão TCP");
+        BIO_printf(bioSaida, "Não foi possível criar a conexão TCP");
     }
-    ###################################################################################
-    ###################################################################################
-    */
 
     //Conecta a sessão SSL com o descritor do socket
     SSL_set_fd(ssl, servidor);
 
     //Realiza a conexão SSL
     if(SSL_connect(ssl)!=1){
-        BIO_printf(outbio, "Não foi possivel reazilar a conexão SSL");
+        BIO_printf(bioSaida, "Não foi possivel reazilar a conexão SSL");
     }
-
-    //Pegar o certificado remoto e o inserir na estrutura x509
-    certificado = SSL_get_peer_certificate(ssl);
-    if(cert == NULL){
-        BIO_printf(outbio, "Não foi possivel recuperar o certificado do site");
-    }
-
-    //Extrair informações do certificado
-    nomeCertificado = X509_NAME_new();
-    nomeCertificado = X509_get_subject_name(certificado);
 
     //Realizar a requisição HTTP para baixar as informações do site
     char msg[512]; //msg = mensagem que será enviada ao servidor
@@ -258,6 +236,7 @@ int conectarServidorSSL(int *sock_desc,struct addrinfo *res,char *endereco,char 
     //index.html fica subentendido quando não se coloca nada após o primeiro /
     //Host: precisa ser especificado pois vários endereços podem utilizar o mesmo servidor ip
     //Connection: close simplesmente fecha a conexão após a resposta do servidor ser enviada
+    char *subEndereco = NULL;
     if(subEndereco == NULL){
         strcpy(msg, "GET / HTTP/1.1\nHost: ");
     }else{
@@ -267,25 +246,28 @@ int conectarServidorSSL(int *sock_desc,struct addrinfo *res,char *endereco,char 
     }
     
     strcat(msg, endereco);
-    strcat(msg, "\r\nConnection: close\n\n");
+    strcat(msg, "\r\nConnection: close\r\n\r\n");
     printf("%s\n",msg);
     BIO_puts(web, msg);
-    BIO_puts(outbio, "\n");
+    BIO_puts(bioSaida, "\n");
 
-    //Receber resposta do servidor
-    //recv(descritor do socket, variável onde será armazenada a resposta do servidor, tamanho da variável, flags, padrão 0)
-    //do while usado para que enquanto a resposta do servidor não for completamente capturada, continuar pegando o que falta
+    //a saida agora será direcionada para um arquivo chamado site.html
+    bioSaida = BIO_new_file("site.html", "w");
+
+    //Receber resposta do servidor e escrever no arquivo usando as funções BIO_read que lê a resposta e 
+    //a funcão BIO_write que escreve a resposta.
     int tam = 0;
     do{
         tam = BIO_read(web, resp_servidor, sizeof(resp_servidor));
 
         if(tam>0){
-            BIO_write(outbio, resp_servidor, tam);
+            BIO_write(bioSaida, resp_servidor, tam);
+	}
 
     }while(tam>0 || BIO_should_retry(web));
 
-    if(outbio){
-        BIO_free(outbio);
+    if(bioSaida){
+        BIO_free(bioSaida);
     }
 
     if(web != NULL){
@@ -295,11 +277,8 @@ int conectarServidorSSL(int *sock_desc,struct addrinfo *res,char *endereco,char 
     //Liberar as estruturas que não serão mais usadas
     SSL_free(ssl);
     close(servidor);
-    X509_free(certificado);
-    SSL_CTX_free(ctx);
-     
+    SSL_CTX_free(ctx);   
 }
-
 int salvar_link_visitado(char *link, char *dominio){
     char *file_name = "linksVisitados.txt", *path = get_path(dominio, file_name);
 
