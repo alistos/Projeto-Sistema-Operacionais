@@ -95,11 +95,11 @@ void conversarServidor(int sock_desc, struct addrinfo *res, char *endereco, char
     //Checa se houve um erro de HTTPS, caso sim, tenta realizar uma conexão https agora
     if(resp_servidor[9] == '3'){
         printf("ERRO DE LOCAL\n\n");
-	int sockSSL_desc; //descritor do socket
+	    int sockSSL_desc; //descritor do socket
         int *psock = &sockSSL_desc;
-	criarServSockSSL(psock, endereco);
-	conectarServidorSSL(psock, endereco, subEndereco);
-     }
+        criarServSockSSL(psock, endereco);
+        conectarServidorSSL(psock, endereco, subEndereco, caminho_arquivo);
+    }
 }
 
 //Conectar a um servidor remoto e conversar com ele
@@ -122,10 +122,10 @@ void conectarServidor(int sock_desc, struct addrinfo *res, char *endereco, char 
 int criarServSockSSL(int *sock_desc, char *endereco){
     //É necessário concatenar o endereco recebido com https:// para que se possa capturar o endereco
     //https de forma correta
-    char end[500] = "https://";
+    char end[LENBUFFER] = "https://";
     strcat(end, endereco);
     char protocolo[10] = "";
-    char nomeHost[500] = "";
+    char nomeHost[LENBUFFER] = "";
     //O port padrão para conexões https é 443, ao contrário do port 80 para conexões http
     char numPort[10] = "443";
     int port;
@@ -137,8 +137,8 @@ int criarServSockSSL(int *sock_desc, char *endereco){
     //seja usado de forma correta pelas funções que criarão o socket
 
     //remove o / no final do link caso exista
-    if(end[strlen(end)] == '/'){
-        end[strlen(end)] = '\0';
+    if(end[LENBUFFER-1] == '/'){
+        end[LENBUFFER-1] = '\0';
     }
 
     //O primeiro : termina a string do protocolo
@@ -180,7 +180,7 @@ int criarServSockSSL(int *sock_desc, char *endereco){
     return *sock_desc;
 }
 
-void conectarServidorSSL(int *sock_desc,char *endereco, char *subEndereco){
+void conectarServidorSSL(int *sock_desc,char *endereco, char *subEndereco, char *caminho_arquivo){
     BIO *bioSaida = NULL;
     BIO *web;
     const SSL_METHOD *method;
@@ -240,8 +240,8 @@ void conectarServidorSSL(int *sock_desc,char *endereco, char *subEndereco){
     }
 
     //Realizar a requisição HTTP para baixar as informações do site
-    char msg[512]; //msg = mensagem que será enviada ao servidor
-    char resp_servidor[1024]; //variável que irá receber a resposta do servidor
+    char msg[LENBUFFER]; //msg = mensagem que será enviada ao servidor
+    char resp_servidor[LENBUFFER]; //variável que irá receber a resposta do servidor
     int bytes_read; //variável de suporte para capturar a resposta do servidor
 
     //Enviar dados ao servidor
@@ -265,7 +265,7 @@ void conectarServidorSSL(int *sock_desc,char *endereco, char *subEndereco){
     BIO_puts(bioSaida, "\n");
 
     //a saida agora será direcionada para um arquivo chamado site.html
-    bioSaida = BIO_new_file("site.html", "w");
+    bioSaida = BIO_new_file(caminho_arquivo, "w");
 
     //Receber resposta do servidor e escrever no arquivo usando as funções BIO_read que lê a resposta e 
     //a funcão BIO_write que escreve a resposta.
@@ -366,6 +366,10 @@ void *baixar_pagina(void *args){
     conectarServidor(sock_desc, res, arg->endereco, arg->subEndereco, caminho_arquivo);
 
     close(sock_desc);
+
+    ListaLinks *lista = filtrar_lista(buscarLinks(caminho_arquivo), arg->endereco);
+    print_lista(lista);
+    salvar_links_econtrados(lista, arg->endereco);
 }
 
 void percorrer_links(char* dominio, char* tipo_arquivo){
@@ -409,7 +413,7 @@ Arg_download* start_arg(char *endereco, char *subEndereco, char* nome_arquivo_sa
     return arg;
 }
 
-void criar_pasta_dominio(char *dominio){
+int criar_pasta_dominio(char *dominio){
     int result = mkdir(dominio, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     // Caso a pasta seja criada o retorno será 0(zero).
     printf("============================================\n");  
@@ -419,27 +423,30 @@ void criar_pasta_dominio(char *dominio){
         printf("FALHA AO CRIAR DIRETORIO!!!\n");
     }
     printf("============================================\n");
+
+    return result;
 }
 
 void *percorrer_dominio(void *args){
     Arg_percorrer_dominio *arg = (Arg_percorrer_dominio*)args;
+    
     char *end = arg->dominio; //endereço do site a ser visitado
     char* nome_arquivo_saida = "site.html";
     char *path = get_path(end, nome_arquivo_saida);
 
-    criar_pasta_dominio(end);
-        
-    Arg_download *arg_site = start_arg(end, NULL,nome_arquivo_saida);
+    if(criar_pasta_dominio(end)){
+        Arg_download *arg_site = start_arg(end, NULL, nome_arquivo_saida);
 
-    pthread_t thread;
-    pthread_create(&thread,NULL,baixar_pagina,(void*)arg_site);
-    pthread_join(thread,NULL);
-        
-    ListaLinks *lista = filtrar_lista(buscarLinks(path),end);
+        pthread_t thread;
+        pthread_create(&thread, NULL, baixar_pagina, (void*)arg_site);
+        pthread_join(thread, NULL);
+            
+        ListaLinks *lista = filtrar_lista(buscarLinks(path), end);
+        print_lista(lista);
+        salvar_links_econtrados(lista,end);
 
-    print_lista(lista);
-    salvar_links_econtrados(lista,end);
-    percorrer_links(end,arg->tipo_arquivo);
+        percorrer_links(end,arg->tipo_arquivo);
+    }
 }
 
 Arg_percorrer_dominio* start_arg_dominio(char *dominio, char *tipo_arquivo){

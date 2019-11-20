@@ -116,10 +116,6 @@ int contido_no_dominio(char *link, char *dominio){
     contido = TRUE;
   }
   else{
-    int len_dominio = strlen(dominio);
-    char *dominio_link = malloc(len_dominio*sizeof(char));
-    strncpy(dominio_link,link,len_dominio);
-
     if(strstr(link,dominio) != NULL){
       contido = TRUE;
     }
@@ -153,15 +149,16 @@ int salvar_links_econtrados(ListaLinks *lista, char *dominio){
   if(arquivo == NULL){
     status = FALSE;
   }
+  else{
+    char* link = pop(lista);
+    while(link!=NULL){
+      fprintf(arquivo,"%s\n", link);
+      link = pop(lista);
+    }
 
-  char* link = pop(lista);
-  while(link!=NULL){
-    fprintf(arquivo,"%s\n", link);
-    link = pop(lista);
+    free(lista);
+    fclose(arquivo);
   }
-
-  free(lista);
-  fclose(arquivo);
 
   printf("============================================\n");
   if(status){
@@ -202,7 +199,7 @@ char* buscar_links_de_arquivo(char *dominio, char *tipo_arquivo){
   }
   
   char *link_temp = pop(lista), *temp;
-  char *str = "==================== LINKS %s ===========================\n";
+  char *str = "================== LINKS ENCONTRADOS =========================\n";
   int contagem_links = lista->quantLinks;
 
   while(link_temp != NULL){

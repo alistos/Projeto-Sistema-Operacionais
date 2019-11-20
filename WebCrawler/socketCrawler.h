@@ -40,13 +40,13 @@ int criarSocket(int *sock_desc, struct addrinfo *res);
 void conversarServidor(int sock_desc, struct addrinfo *res, char *endereco, char *subEndereco, char *caminho_arquivo);
 void conectarServidor(int sock_desc, struct addrinfo *res, char *endereco, char *subEndereco, char *caminho_arquivo);
 int criarServSockSSL(int *sock_desc, char *endereco);
-void conectarServidorSSL(int *sock_desc,char *endereco, char *subEndereco);
+void conectarServidorSSL(int *sock_desc,char *endereco, char *subEndereco, char *caminho_arquivo);
 int salvar_link_visitado(char *link, char *dominio);
 ListaLinks* listar_links_visitados(char *dominio);
 int link_visitado(char *link, char *dominio);
 void *baixar_pagina(void *args);
 void percorrer_links(char* dominio, char* tipo_arquivo);
-void criar_pasta_dominio(char *dominio);
+int criar_pasta_dominio(char *dominio);
 void *percorrer_dominio(void *dominio);
 void *exibir_statisticas(void *args);
 
