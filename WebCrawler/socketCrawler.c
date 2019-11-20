@@ -10,7 +10,7 @@
 
 #define TRUE 1
 #define FALSE 0
-#define LENBUFFER 312
+#define LENBUFFER 1024
 
 //definir a estrutura do socket servidor
 struct addrinfo criarServidor(struct addrinfo hints, struct addrinfo **res, char *endereco){

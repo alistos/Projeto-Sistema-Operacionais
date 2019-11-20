@@ -26,14 +26,5 @@ int main(int argc, char *argv[]){
         pthread_join(thread,NULL);
     }
 
-    for(int j = 0 ; j<argc ; j++){
-        char *dominio = argv[j];
-        Arg_statistica *args = start_arg_statistica(dominio, tipo_arquivo);
-
-        pthread_t thread;
-        pthread_create(&thread,NULL,exibir_statisticas,(void*)args);
-        pthread_join(thread,NULL);
-    }
-
     return 0;
 }

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "analizador.h"
-#define MAXBUFFER 512
+#define MAXBUFFER 1024
 #define TRUE 1
 #define FALSE 0
 
