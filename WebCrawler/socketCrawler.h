@@ -9,6 +9,13 @@
 #include <netdb.h> //struct addrinfo e função getaddrinfo
 #include "AnalizadorLexico/analizador.h"
 
+#include <openssl/bio.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <openssl/pem.h>
+#include <openssl/x509.h>
+#include <openssl/x509_vfy.h>
+
 typedef struct arg_download_pagina{
     char *endereco;
     char *subEndereco;
@@ -32,6 +39,8 @@ struct addrinfo criarServidor(struct addrinfo hints, struct addrinfo **res, char
 int criarSocket(int *sock_desc, struct addrinfo *res);
 void conversarServidor(int sock_desc, struct addrinfo *res, char *endereco, char *subEndereco, char *caminho_arquivo);
 void conectarServidor(int sock_desc, struct addrinfo *res, char *endereco, char *subEndereco, char *caminho_arquivo);
+int criarServSockSSL(int *sock_desc, char *endereco);
+void conectarServidorSSL(int *sock_desc,char *endereco, char *subEndereco);
 int salvar_link_visitado(char *link, char *dominio);
 ListaLinks* listar_links_visitados(char *dominio);
 int link_visitado(char *link, char *dominio);
