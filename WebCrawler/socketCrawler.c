@@ -38,11 +38,12 @@ int criarSocket(int *sock_desc, struct addrinfo *res){
     return *sock_desc;
 }
 
-void conversarServidor(int sock_desc, struct addrinfo *res, char *endereco, char *subEndereco, FILE *fp){
+void conversarServidor(int sock_desc, struct addrinfo *res, char *endereco, char *subEndereco, char *caminho_arquivo){
     char msg[512]; //msg = mensagem que será enviada ao servidor
     char resp_servidor[1024]; //variável que irá receber a resposta do servidor
     int bytes_read; //variável de suporte para capturar a resposta do servidor
-
+    FILE *fp = fopen(caminho_arquivo, "w");
+    if(fp == NULL){return;}
     //Enviar dados ao servidor
     //msg = "GET /index.html HTTP/1.1\r\nHost: www.site.com\r\n\r\n"; comando HTTP para pegar a pagina principal de um website
     //index.html fica subentendido quando não se coloca nada após o primeiro /
@@ -80,10 +81,11 @@ void conversarServidor(int sock_desc, struct addrinfo *res, char *endereco, char
         }
     } while(bytes_read > 0);
     printf("%s\n",resp_servidor);
+    fclose(fp);
 }
 
 //Conectar a um servidor remoto e conversar com ele
-void conectarServidor(int sock_desc, struct addrinfo *res, char *endereco, char *subEndereco, FILE *fp){
+void conectarServidor(int sock_desc, struct addrinfo *res, char *endereco, char *subEndereco, char *caminho_arquivo){
     //connect(descritor do socket, struct do servidor, tamanho do servidor
     if(connect(sock_desc , res->ai_addr , res->ai_addrlen) < 0){
         printf("Nao foi possivel estabelecer a conexao!");
@@ -94,7 +96,7 @@ void conectarServidor(int sock_desc, struct addrinfo *res, char *endereco, char 
     }
 
     freeaddrinfo(res);
-    conversarServidor(sock_desc, res, endereco, subEndereco, fp);
+    conversarServidor(sock_desc, res, endereco, subEndereco, caminho_arquivo);
 }
 
 int salvar_link_visitado(char *link, char *dominio){
@@ -163,16 +165,12 @@ void *baixar_pagina(void *args){
     struct addrinfo hints, *res;
     struct addrinfo **pres = &res;
 
-    char *path = get_path(arg->endereco, arg->nome_arquivo_saida);
+    char *caminho_arquivo = get_path(arg->endereco, arg->nome_arquivo_saida);
     
-    FILE *fp; //arquivo onde será armazenado a resposta do servidor
-    fp = fopen(path, "w");
-
     criarServidor(hints, pres, arg->endereco);
     criarSocket(psock, res);    
-    conectarServidor(sock_desc, res, arg->endereco, arg->subEndereco, fp);
+    conectarServidor(sock_desc, res, arg->endereco, arg->subEndereco, caminho_arquivo);
 
-    fclose(fp);
     close(sock_desc);
 }
 
