@@ -28,5 +28,6 @@ ListaLinks* filtrar_lista(ListaLinks *lista, char *dominio);
 int salvar_links_econtrados(ListaLinks *lista, char *dominio);
 char* get_path(char *dominio, char *file_name);
 char* buscar_links_de_arquivo(char *dominio, char *tipo_arquivo);
+void finalizar_string(char *string);
 
 #endif

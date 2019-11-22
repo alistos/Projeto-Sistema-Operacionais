@@ -139,10 +139,32 @@ ListaLinks* filtrar_lista(ListaLinks *lista, char *dominio){
   return lista_filtrada;
 }
 
+void finalizar_string(char *string){
+  int i = 0;
+  while (string[i] != '\n'){
+          i++;
+  }
+  string[i] = '\0';
+}
+
 int salvar_links_econtrados(ListaLinks *lista, char *dominio){
   char *file_name = "linksEncontrados.txt", *path = get_path(dominio, file_name);
+  char *buffer_link = malloc(MAXBUFFER*sizeof(char));
+  FILE *arquivo;
+  ListaLinks *links_salvos = startLista();
+  
+  arquivo = fopen(path,"r");
+  if (arquivo != NULL){
+      while (fgets(buffer_link, MAXBUFFER,arquivo) != NULL){
+        finalizar_string(buffer_link);
+        addLista(links_salvos, buffer_link);
+        buffer_link = malloc(MAXBUFFER*sizeof(char));
+      }
 
-  FILE *arquivo = fopen(path,"a");
+      fclose(arquivo);
+  }
+  
+  arquivo = fopen(path,"a");
   
   int status = TRUE, quantLinks = lista->quantLinks;
   
@@ -151,8 +173,20 @@ int salvar_links_econtrados(ListaLinks *lista, char *dominio){
   }
   else{
     char* link = pop(lista);
+    No *temp;
+    int foi_salvo = FALSE;
     while(link!=NULL){
-      fprintf(arquivo,"%s\n", link);
+      temp = links_salvos->primeiro;
+      while(temp != NULL && foi_salvo != TRUE){
+        if(strcmp(temp->link, link) == 0){
+          foi_salvo = TRUE;
+        }
+        temp = temp->proximo;
+      }
+
+      if(foi_salvo == FALSE){
+        fprintf(arquivo,"%s\n", link);
+      }
       link = pop(lista);
     }
 
