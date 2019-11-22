@@ -23,12 +23,9 @@ int main(int argc, char *argv[]){
         Arg_percorrer_dominio *args = start_arg_dominio(dominio,tipo_arquivo);
         
         pthread_t thread;
-        
         pthread_create(&thread,NULL,percorrer_dominio,(void*)args);
-        
         pthread_join(thread,NULL);
     }
-
 
     return 0;
 }

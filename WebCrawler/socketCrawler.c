@@ -17,9 +17,15 @@
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
 
+#define RED    "\x1b[31m"
+#define GREEN  "\x1b[32m"
+#define BLUE   "\x1b[34m"
+#define YELLOW "\x1b[33m"
+#define RESET  "\x1b[0m"
+
 #define TRUE 1
 #define FALSE 0
-#define LENBUFFER 1024
+#define LENBUFFER 512
 
 //definir a estrutura do socket servidor
 struct addrinfo criarServidor(struct addrinfo hints, struct addrinfo **res, char *endereco){
@@ -306,7 +312,7 @@ int salvar_link_visitado(char *link, char *dominio){
     }else{
         fprintf(arquivo,"%s\n", link);  
         fclose(arquivo);      
-        printf("LINK: %s VISITADO!!!\n", link);
+        printf("%sLINK: %s VISITADO!!!%s\n", BLUE, link, RESET);
     }
     printf("============================================\n");    
     return status;
@@ -317,15 +323,24 @@ ListaLinks* listar_links_visitados(char *dominio){
     char *buffer_link = malloc(LENBUFFER*sizeof(char));
     char *file_name = "linksVisitados.txt", *path = get_path(dominio, file_name);
     int fim;
-    FILE *arquivo = fopen(path,"a");
-    
+    FILE *arquivo = fopen(path,"r");
     if(arquivo != NULL){
+        printf("%s\n================ LINKS VISITADOS =================%s\n", YELLOW, GREEN);
+        int i = 1;
         while(fgets(buffer_link, LENBUFFER, arquivo) != NULL){
-            fim = strlen(buffer_link)-1;
-            buffer_link[fim] = '\0';
+            finalizar_string(buffer_link);
+            printf("%d => %s \n", i, buffer_link);
             addLista(lista, buffer_link);
             buffer_link = malloc(LENBUFFER*sizeof(char));
+            i++;
         }
+    
+        No *temp = lista->primeiro;
+        while(temp!=NULL){
+            printf("%s\n", temp->link);
+            temp = temp->proximo;
+        }
+        printf("%s==================================================%s\n", YELLOW, RESET);
 
         fclose(arquivo);
     }
@@ -339,10 +354,10 @@ int link_visitado(char *link, char *dominio){
     char *link_lista = pop(lista);
     
     while (link_lista != NULL && boolean != TRUE){
-        if(strcmp(link, link_lista) == 0){//funcao strcmp retorna 0(zero) quando as strings iguais
+        if(strcmp(link, link_lista) == 0){
             boolean = TRUE;
         }
-        link_lista = pop(lista);    
+        link_lista = pop(lista);
     }
     
     free_lista(lista);
@@ -373,21 +388,21 @@ void *baixar_pagina(void *args){
 }
 
 void percorrer_links(char* dominio, char* tipo_arquivo){
-    char *buffer_link = malloc(LENBUFFER*sizeof(char));
-    char *nome_arquivo_saida = malloc(LENBUFFER*sizeof(char)), *temp = malloc(LENBUFFER*sizeof(char));
+    char buffer_link[LENBUFFER];
+    char nome_arquivo_saida[LENBUFFER], temp[LENBUFFER];
     char *arq_links = "linksEncontrados.txt", *path = get_path(dominio, arq_links);
     int contador = 1;
 
     FILE *arquivoLinks = fopen(path,"r");
     if(arquivoLinks != NULL){
         while(fgets(buffer_link, LENBUFFER, arquivoLinks) != NULL){
-            if(!link_visitado(buffer_link, dominio)){
+            if(link_visitado(buffer_link, dominio) == FALSE){
                 buffer_link[strlen(buffer_link)-1] = '\0';
                 snprintf(temp, 10, "%d", contador);//converte int em string
 
-                strcpy(nome_arquivo_saida,"link ");
-                strcat(nome_arquivo_saida,temp);
-                strcat(nome_arquivo_saida,".html");
+                strcpy(nome_arquivo_saida, "link ");
+                strcat(nome_arquivo_saida, temp);
+                strcat(nome_arquivo_saida, ".html");
 
                 Arg_download *args = start_arg(dominio, buffer_link, nome_arquivo_saida);
                 pthread_t thread;
@@ -396,7 +411,6 @@ void percorrer_links(char* dominio, char* tipo_arquivo){
                 contador++;
             
                 salvar_link_visitado(buffer_link, dominio);
-                buscarLinks(get_path(dominio,nome_arquivo_saida));//percorre a pagina recem baixada para encontrar mais links
             }
         }
         fclose(arquivoLinks);
@@ -415,38 +429,36 @@ Arg_download* start_arg(char *endereco, char *subEndereco, char* nome_arquivo_sa
 
 int criar_pasta_dominio(char *dominio){
     int result = mkdir(dominio, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    int boolean = FALSE;
     // Caso a pasta seja criada o retorno será 0(zero).
-    printf("============================================\n");  
     if(!result){
+        printf("%s============================================\n",GREEN);  
         printf("DIRETORIO %s CRIADO COM SUCESSO!!!\n",dominio);
+        boolean = TRUE;
     }else{
+        printf("%s============================================\n",RED);  
         printf("FALHA AO CRIAR DIRETORIO!!!\n");
     }
-    printf("============================================\n");
-
-    return result;
+    
+    printf("============================================%s\n", RESET);
+    return boolean;
 }
 
 void *percorrer_dominio(void *args){
     Arg_percorrer_dominio *arg = (Arg_percorrer_dominio*)args;
     
     char *end = arg->dominio; //endereço do site a ser visitado
-    char* nome_arquivo_saida = "site.html";
+    char *nome_arquivo_saida = "site.html";
     char *path = get_path(end, nome_arquivo_saida);
 
-    if(criar_pasta_dominio(end)){
-        Arg_download *arg_site = start_arg(end, NULL, nome_arquivo_saida);
+    criar_pasta_dominio(end);
+    Arg_download *arg_site = start_arg(end, NULL, nome_arquivo_saida);
 
-        pthread_t thread;
-        pthread_create(&thread, NULL, baixar_pagina, (void*)arg_site);
-        pthread_join(thread, NULL);
+    pthread_t thread;
+    pthread_create(&thread, NULL, baixar_pagina, (void*)arg_site);
+    pthread_join(thread, NULL);
             
-        ListaLinks *lista = filtrar_lista(buscarLinks(path), end);
-        print_lista(lista);
-        salvar_links_econtrados(lista,end);
-
-        percorrer_links(end,arg->tipo_arquivo);
-    }
+    percorrer_links(end,arg->tipo_arquivo);
 }
 
 Arg_percorrer_dominio* start_arg_dominio(char *dominio, char *tipo_arquivo){
