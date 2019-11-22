@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "analizador.h"
-#define MAXBUFFER 512
+#define MAXBUFFER 1024
 #define TRUE 1
 #define FALSE 0
 
@@ -116,10 +116,6 @@ int contido_no_dominio(char *link, char *dominio){
     contido = TRUE;
   }
   else{
-    int len_dominio = strlen(dominio);
-    char *dominio_link = malloc(len_dominio*sizeof(char));
-    strncpy(dominio_link,link,len_dominio);
-
     if(strstr(link,dominio) != NULL){
       contido = TRUE;
     }
@@ -143,25 +139,60 @@ ListaLinks* filtrar_lista(ListaLinks *lista, char *dominio){
   return lista_filtrada;
 }
 
+void finalizar_string(char *string){
+  int i = 0;
+  while (string[i] != '\n'){
+          i++;
+  }
+  string[i] = '\0';
+}
+
 int salvar_links_econtrados(ListaLinks *lista, char *dominio){
   char *file_name = "linksEncontrados.txt", *path = get_path(dominio, file_name);
+  char *buffer_link = malloc(MAXBUFFER*sizeof(char));
+  FILE *arquivo;
+  ListaLinks *links_salvos = startLista();
+  
+  arquivo = fopen(path,"r");
+  if (arquivo != NULL){
+      while (fgets(buffer_link, MAXBUFFER,arquivo) != NULL){
+        finalizar_string(buffer_link);
+        addLista(links_salvos, buffer_link);
+        buffer_link = malloc(MAXBUFFER*sizeof(char));
+      }
 
-  FILE *arquivo = fopen(path,"a");
+      fclose(arquivo);
+  }
+  
+  arquivo = fopen(path,"a");
   
   int status = TRUE, quantLinks = lista->quantLinks;
   
   if(arquivo == NULL){
     status = FALSE;
   }
+  else{
+    char* link = pop(lista);
+    No *temp;
+    int foi_salvo = FALSE;
+    while(link!=NULL){
+      temp = links_salvos->primeiro;
+      while(temp != NULL && foi_salvo != TRUE){
+        if(strcmp(temp->link, link) == 0){
+          foi_salvo = TRUE;
+        }
+        temp = temp->proximo;
+      }
 
-  char* link = pop(lista);
-  while(link!=NULL){
-    fprintf(arquivo,"%s\n", link);
-    link = pop(lista);
+      if(foi_salvo == FALSE){
+        fprintf(arquivo,"%s\n", link);
+      }
+      link = pop(lista);
+    }
+
+    free(lista);
+    fclose(arquivo);
   }
-
-  free(lista);
-  fclose(arquivo);
 
   printf("============================================\n");
   if(status){
@@ -184,7 +215,7 @@ char* get_path(char *dominio, char *file_name){
     return path;
 }
 
-void buscar_links_de_arquivo(char *dominio, char *tipo_arquivo){
+char* buscar_links_de_arquivo(char *dominio, char *tipo_arquivo){
   char *file_name = "linksEncontrados.txt",
        *path = get_path(dominio,file_name),
        *buffer_link = malloc(MAXBUFFER*sizeof(char));
@@ -201,12 +232,22 @@ void buscar_links_de_arquivo(char *dominio, char *tipo_arquivo){
     fclose(arquivo);
   }
   
-  char *link_temp = pop(lista);
-  printf("==================== LINKS %s ===========================\n",tipo_arquivo);
-  print_lista(lista);
+  char *link_temp = pop(lista), *temp;
+  char *str = "================== LINKS ENCONTRADOS =========================\n";
+  int contagem_links = lista->quantLinks;
+
   while(link_temp != NULL){
-    printf("%s\n",link_temp);
+    strcat(str, "->");
+    strcat(str, link_temp);
+    strcat(str, "\n");
+
     link_temp = pop(lista);
   }
-  printf("==========================================================\n");
+  snprintf(temp, 10, "%d", contagem_links);//converte int em string
+
+  strcat(str, "LINKS ENCONTRADOS : ");
+  strcat(str, temp);
+  strcat(str, "\n==========================================================\n");
+  
+  return str;
 }
