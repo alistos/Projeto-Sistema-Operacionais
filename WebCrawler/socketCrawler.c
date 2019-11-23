@@ -60,7 +60,7 @@ void conversarServidor(int sock_desc, struct addrinfo *res, char *endereco, char
     FILE *fp = fopen(caminho_arquivo, "w");
     if(fp == NULL){return;}
     //Enviar dados ao servidor
-    //msg = "GET /index.html HTTP/1.1\r\nHost: www.site.com\r\n\r\n"; comando HTTP para pegar a pagina principal de um website
+    //msg = "GET /index.html HTTP/1.1\r\nHost: www.site.com\r\n\r\n"; comando HTTP para pegar a pagina principal de um website.html
     //index.html fica subentendido quando não se coloca nada após o primeiro /
     //Host: precisa ser especificado pois vários endereços podem utilizar o mesmo servidor ip
     //Connection: close simplesmente fecha a conexão após a resposta do servidor ser enviada
@@ -95,13 +95,18 @@ void conversarServidor(int sock_desc, struct addrinfo *res, char *endereco, char
             fprintf(fp, "%.*s", bytes_read, resp_servidor);
         }
     } while(bytes_read > 0);
-    printf("%s\n",resp_servidor);
     fclose(fp);
 
     //Checa se houve um erro de HTTPS, caso sim, tenta realizar uma conexão https agora
-    if(resp_servidor[9] == '3'){
-        printf("ERRO DE LOCAL\n\n");
-	    int sockSSL_desc; //descritor do socket
+    FILE *arquivo = fopen(caminho_arquivo,"r");
+    int c, i = 0;
+    while(i<10){
+	c = fgetc(arquivo);
+	i++;
+    }
+    fclose(arquivo);
+    if(c == '3' || c == '4'){
+	int sockSSL_desc; //descritor do socket
         int *psock = &sockSSL_desc;
         criarServSockSSL(psock, endereco);
         conectarServidorSSL(psock, endereco, subEndereco, caminho_arquivo);
@@ -123,7 +128,6 @@ void conectarServidor(int sock_desc, struct addrinfo *res, char *endereco, char 
     conversarServidor(sock_desc, res, endereco, subEndereco, caminho_arquivo);
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
 //definir a estrutura do socket servidor SSL
 int criarServSockSSL(int *sock_desc, char *endereco){
     //É necessário concatenar o endereco recebido com https:// para que se possa capturar o endereco
@@ -285,10 +289,14 @@ void conectarServidorSSL(int *sock_desc,char *endereco, char *subEndereco, char 
 
     }while(tam>0 || BIO_should_retry(web));
 
+    if(bioSaida!=NULL){
+	BIO_free(bioSaida);
+    }
+
     //Liberar as estruturas que não serão mais usadas
     SSL_free(ssl);
     close(servidor);
-    SSL_CTX_free(ctx);   
+    SSL_CTX_free(ctx);
 }
 
 int salvar_link_visitado(char *link, char *dominio){
