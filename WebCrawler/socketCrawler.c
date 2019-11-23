@@ -105,7 +105,7 @@ void conversarServidor(int sock_desc, struct addrinfo *res, char *endereco, char
 	i++;
     }
     fclose(arquivo);
-    if(c == '3'){
+    if(c == '3' || c == '4'){
 	int sockSSL_desc; //descritor do socket
         int *psock = &sockSSL_desc;
         criarServSockSSL(psock, endereco);
@@ -128,7 +128,6 @@ void conectarServidor(int sock_desc, struct addrinfo *res, char *endereco, char 
     conversarServidor(sock_desc, res, endereco, subEndereco, caminho_arquivo);
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
 //definir a estrutura do socket servidor SSL
 int criarServSockSSL(int *sock_desc, char *endereco){
     //É necessário concatenar o endereco recebido com https:// para que se possa capturar o endereco
