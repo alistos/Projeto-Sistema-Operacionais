@@ -285,14 +285,6 @@ void conectarServidorSSL(int *sock_desc,char *endereco, char *subEndereco, char 
 
     }while(tam>0 || BIO_should_retry(web));
 
-    if(bioSaida){
-        BIO_free(bioSaida);
-    }
-
-    if(web != NULL){
-        BIO_free_all(web);
-    }
-
     //Liberar as estruturas que não serão mais usadas
     SSL_free(ssl);
     close(servidor);
