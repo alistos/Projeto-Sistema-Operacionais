@@ -205,6 +205,7 @@ int salvar_links_econtrados(ListaLinks *lista, char *dominio){
   return status;
 }
 
+//esta fucao retorna o caminho para abertura de um arquivo.
 char* get_path(char *dominio, char *file_name){
     char *path = malloc(MAXBUFFER*sizeof(char));
 
@@ -214,7 +215,7 @@ char* get_path(char *dominio, char *file_name){
 
     return path;
 }
-
+// procura links que possuem a extenção de arquiv passada como argumento
 char* buscar_links_de_arquivo(char *dominio, char *tipo_arquivo){
   char *file_name = "linksEncontrados.txt",
        *path = get_path(dominio,file_name),
@@ -225,8 +226,10 @@ char* buscar_links_de_arquivo(char *dominio, char *tipo_arquivo){
 
   if(arquivo!=NULL){
     while(fgets(buffer_link, MAXBUFFER, arquivo) != NULL){
-      if(strstr(buffer_link, tipo_arquivo) != NULL){
+      finalizar_string(buffer_link);
+      if(strstr(tipo_arquivo, buffer_link) != NULL){
         addLista(lista, buffer_link);
+        buffer_link = malloc(MAXBUFFER*sizeof(char));
       }
     }
     fclose(arquivo);
