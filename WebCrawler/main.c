@@ -21,6 +21,7 @@ int main(int argc, char *argv[]){
     for(int i = 2 ; i<argc ; i++){
         char *dominio = argv[i];
         Arg_percorrer_dominio *args = start_arg_dominio(dominio,tipo_arquivo);
+        Arg_statistica *arg_stat = start_arg_statistica(dominio,tipo_arquivo);
         
         pthread_t thread;
         pthread_create(&thread,NULL,percorrer_dominio,(void*)args);

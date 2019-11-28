@@ -49,5 +49,4 @@ void percorrer_links(char* dominio, char* tipo_arquivo);
 int criar_pasta_dominio(char *dominio);
 void *percorrer_dominio(void *dominio);
 void *exibir_statisticas(void *args);
-
 #endif

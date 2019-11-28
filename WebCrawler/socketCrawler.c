@@ -19,13 +19,15 @@
 
 #define RED    "\x1b[31m"
 #define GREEN  "\x1b[32m"
-#define BLUE   "\x1b[34m"
 #define YELLOW "\x1b[33m"
+#define BLUE   "\x1b[34m"
+#define PINK   "\x1b[35m"
 #define RESET  "\x1b[0m"
 
 #define TRUE 1
 #define FALSE 0
 #define LENBUFFER 512
+#define LEN_VETOR 1024
 
 //definir a estrutura do socket servidor
 struct addrinfo criarServidor(struct addrinfo hints, struct addrinfo **res, char *endereco){
@@ -383,7 +385,24 @@ void *baixar_pagina(void *args){
     close(sock_desc);
 
     ListaLinks *lista = filtrar_lista(buscarLinks(caminho_arquivo), arg->endereco);
+
+    printf("%s++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n", PINK);
+    if(arg->subEndereco == NULL){
+        printf("ARVORE DO LINKS (PAGINA PRINCIPAL) :%s %s %s\n", RED, arg->endereco, PINK);
+    }
+    else{
+        printf("ARVORE DO LINKS :%s %s %s\n" , RED, arg->subEndereco, PINK);
+    }
     print_lista(lista);
+    
+    No *temp = lista->primeiro;
+    int i = 1;
+    while(temp != NULL){
+        printf("%d = %s\n", i,temp->link);
+        temp = temp->proximo;
+        i++;
+    }
+    printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n%s", RESET);
     salvar_links_econtrados(lista, arg->endereco);
 }
 
@@ -408,9 +427,11 @@ void percorrer_links(char* dominio, char* tipo_arquivo){
                 pthread_t thread;
                 pthread_create(&thread,NULL,baixar_pagina,(void*)args);
                 pthread_join(thread,NULL);
+    
                 contador++;
             
                 salvar_link_visitado(buffer_link, dominio);
+
             }
         }
         fclose(arquivoLinks);
@@ -459,6 +480,10 @@ void *percorrer_dominio(void *args){
     pthread_join(thread, NULL);
             
     percorrer_links(end,arg->tipo_arquivo);
+    //Arg_statistica *args_stat = start_arg_statistica(arg->dominio, arg->tipo_arquivo);
+    //pthread_t thread_stat;
+    //pthread_create(&thread_stat,NULL,exibir_statisticas,(void*)args_stat);
+    //pthread_join(thread_stat,NULL);
 }
 
 Arg_percorrer_dominio* start_arg_dominio(char *dominio, char *tipo_arquivo){
@@ -477,7 +502,8 @@ Arg_statistica* start_arg_statistica(char *dominio, char *tipo_arquivo){
 }
 
 void *exibir_statisticas(void *args){
-    Arg_statistica* arg = (Arg_statistica*)args;
+    Arg_statistica *arg = (Arg_statistica*)args;
+    printf("%s============== LINKS DE EXTENSAO DE ARQUIVO %s ENCONTRADOS ===============", RED, arg->tipo_arquivo);
     char *str = buscar_links_de_arquivo(arg->dominio, arg->tipo_arquivo);
-    printf("%s",str);
+    printf("%s%s",str, RESET);
 }
