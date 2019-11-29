@@ -1,7 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "analizador.h"
+
 #define MAXBUFFER 1024
 #define TRUE 1
 #define FALSE 0
@@ -216,41 +214,33 @@ char* get_path(char *dominio, char *file_name){
     return path;
 }
 // procura links que possuem a extenção de arquiv passada como argumento
-char* buscar_links_de_arquivo(char *dominio, char *tipo_arquivo){
-  char *file_name = "linksEncontrados.txt",
-       *path = get_path(dominio,file_name),
-       *buffer_link = malloc(MAXBUFFER*sizeof(char));
-  
-  ListaLinks *lista = startLista();
-  FILE *arquivo = fopen(path, "r");
+ListaLinks* buscar_links_de_arquivo(ListaLinks *lista, char* dominio ,char *extensao_arquivo){
+  ListaLinks *lista_links_arquivo = startLista();
+  No *no = lista->primeiro;
 
-  if(arquivo!=NULL){
-    while(fgets(buffer_link, MAXBUFFER, arquivo) != NULL){
-      finalizar_string(buffer_link);
-      if(strstr(tipo_arquivo, buffer_link) != NULL){
-        addLista(lista, buffer_link);
-        buffer_link = malloc(MAXBUFFER*sizeof(char));
-      }
+  char *arq = malloc(MAXBUFFER*sizeof(char));
+  strcpy(arq, extensao_arquivo);
+  strcat(arq,".txt");
+
+  FILE *arquivo = fopen(get_path(dominio, arq), "a");
+
+  while(no != NULL){
+    if(strstr(no->link, extensao_arquivo)){
+      char *buffer = malloc(strlen(no->link)+1);
+      strcpy(buffer, no->link);
+      addLista(lista_links_arquivo, buffer);
+      fprintf(arquivo,"%s\n", no->link);
     }
-    fclose(arquivo);
+    no = no->proximo;
   }
-  
-  char *link_temp = pop(lista), *temp;
-  char *str = "================== LINKS ENCONTRADOS =========================\n";
-  int contagem_links = lista->quantLinks;
+  return lista_links_arquivo;
+}
 
-  while(link_temp != NULL){
-    strcat(str, "->");
-    strcat(str, link_temp);
-    strcat(str, "\n");
-
-    link_temp = pop(lista);
+void exibir_links_lista(ListaLinks *lista){
+  No *no = lista->primeiro;
+  while(no != NULL){
+    printf("%s\n", no->link);
+    printf("---------------------------------------------------------------------\n");
+    no = no->proximo;
   }
-  snprintf(temp, 10, "%d", contagem_links);//converte int em string
-
-  strcat(str, "LINKS ENCONTRADOS : ");
-  strcat(str, temp);
-  strcat(str, "\n==========================================================\n");
-  
-  return str;
 }
