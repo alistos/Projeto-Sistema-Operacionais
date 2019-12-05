@@ -4,6 +4,7 @@
 #define TRUE 1
 #define FALSE 0
 
+//Aloca espaco para um no de lista escadeada
 No* startNo(char *link){
   No *novo = malloc(sizeof(No));
   novo->link = link;
@@ -12,6 +13,7 @@ No* startNo(char *link){
   return novo;
 }
 
+// Aloca espaco para uma lista encadeada
 ListaLinks* startLista(){
   ListaLinks *lista = malloc(sizeof(ListaLinks));
   lista->primeiro = NULL;
@@ -21,6 +23,7 @@ ListaLinks* startLista(){
   return lista;
 }
 
+// libera o espaco alocado para uma lista
 void free_lista(ListaLinks *lista){
   char *link = pop(lista);
   while (link != NULL){
@@ -29,6 +32,7 @@ void free_lista(ListaLinks *lista){
   free(lista);
 }
 
+// Adiciona um link a uma lista encadeada
 void addLista(ListaLinks* lista, char* link){
   No *novo = startNo(link);
   if(lista->primeiro == NULL){
@@ -42,6 +46,7 @@ void addLista(ListaLinks* lista, char* link){
   lista->quantLinks += 1;
 }
 
+// Esta funcao retira um link salvo na lista e liberar a mémoria e retorna
 char* pop(ListaLinks *lista){
   char* link = NULL;
   if(lista->primeiro != NULL){
@@ -59,6 +64,8 @@ char* pop(ListaLinks *lista){
   return link;
 }
 
+
+// Exibir informações basicas sobre uma lista
 void print_lista(ListaLinks *lista){
   printf("============================================\n");
   printf("LINKS ENCONTRADOS: %d\n", lista->quantLinks);
@@ -66,6 +73,8 @@ void print_lista(ListaLinks *lista){
 
 }
 
+// Função que recebe o nome de um arquivo, abre o mesmo e
+// salva os links encontrados em uma lista encadeada
 ListaLinks* buscarLinks(char* nome_arquivo){
   FILE *arquivo = fopen(nome_arquivo,"r");
   ListaLinks *lista = startLista();
@@ -94,6 +103,7 @@ ListaLinks* buscarLinks(char* nome_arquivo){
   return lista;
 }
 
+// Faz a coleta de um lista a partir de um arquivo
 char* pegar_link(FILE *arquivo){
   char *link = malloc(MAXBUFFER*sizeof(char)), c = getc(arquivo);
 
@@ -107,6 +117,7 @@ char* pegar_link(FILE *arquivo){
   }
 }
 
+// Checa se um links pertence ao dominio requerido
 int contido_no_dominio(char *link, char *dominio){
   int contido = FALSE;
 
@@ -121,6 +132,7 @@ int contido_no_dominio(char *link, char *dominio){
   return contido;
 }
 
+// Filtra uma lista coletando apenas os links que pertencem ao dominio especificado
 ListaLinks* filtrar_lista(ListaLinks *lista, char *dominio){
   ListaLinks *lista_filtrada = startLista();
   No *no = lista->primeiro, *temp;
@@ -137,6 +149,7 @@ ListaLinks* filtrar_lista(ListaLinks *lista, char *dominio){
   return lista_filtrada;
 }
 
+// Coloca o simbolo de fim de string para evitar erros.
 void finalizar_string(char *string){
   int i = 0;
   while (string[i] != '\n'){
@@ -203,7 +216,7 @@ int salvar_links_econtrados(ListaLinks *lista, char *dominio){
   return status;
 }
 
-//esta fucao retorna o caminho para abertura de um arquivo.
+//esta fucao retorna o caminho para abertura de um arquivo na pasta do dominio.
 char* get_path(char *dominio, char *file_name){
     char *path = malloc(MAXBUFFER*sizeof(char));
 
@@ -213,7 +226,7 @@ char* get_path(char *dominio, char *file_name){
 
     return path;
 }
-// procura links que possuem a extenção de arquiv passada como argumento
+// procura links que possuem a extenção de arquivo passada como argumento
 ListaLinks* buscar_links_de_arquivo(ListaLinks *lista, char* dominio ,char *extensao_arquivo){
   ListaLinks *lista_links_arquivo = startLista();
   No *no = lista->primeiro;
@@ -236,6 +249,7 @@ ListaLinks* buscar_links_de_arquivo(ListaLinks *lista, char* dominio ,char *exte
   return lista_links_arquivo;
 }
 
+// Exibi em console todos os links de uma lista
 void exibir_links_lista(ListaLinks *lista){
   No *no = lista->primeiro;
   while(no != NULL){

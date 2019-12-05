@@ -326,6 +326,7 @@ ListaLinks* listar_links_visitados(char *dominio){
     return lista;
 }
 
+// Checa se um link já foi visitado.
 int link_visitado(char *link, char *dominio){
     int boolean = FALSE;
     ListaLinks *lista = listar_links_visitados(dominio);
@@ -343,6 +344,11 @@ int link_visitado(char *link, char *dominio){
     return boolean;
 }
 
+// Função para ser utilizado com threads. Faz download de uma pagina.
+// O parametro passado é do tipo struct devido ser necessário mais de um
+// argumento para a função.
+// funções que são usadas com threads só tem um argumento do tipo void, que pode
+// ser convertido internamento no tipo necessário a funcao, no caso uma struct.
 void *baixar_pagina(void *args){
 
     Arg_download *arg = (Arg_download*)args;
@@ -382,6 +388,7 @@ void *baixar_pagina(void *args){
     salvar_links_econtrados(lista, arg->endereco);
 }
 
+// Percorre os links encontrados e salvos no arquivo.
 void percorrer_links(char* dominio, char* tipo_arquivo){
     char buffer_link[LENBUFFER];
     char nome_arquivo_saida[LENBUFFER], temp[LENBUFFER];
@@ -401,8 +408,9 @@ void percorrer_links(char* dominio, char* tipo_arquivo){
 
                 Arg_download *args = start_arg(dominio, buffer_link, nome_arquivo_saida, tipo_arquivo);
                 pthread_t thread;
-     
+                // Para cada link não visitado é criado um thred para baixa a respectiva página
                 pthread_create(&thread,NULL,baixar_pagina,(void*)args);
+                // Join cria sequencia e garante a executação de todos os threads.
                 pthread_join(thread,NULL);
                 contador++;
             
@@ -413,6 +421,7 @@ void percorrer_links(char* dominio, char* tipo_arquivo){
     }
 }
 
+// Cria a struct com parametros necessários para baixar uma página.
 Arg_download* start_arg(char *endereco, char *subEndereco, char* nome_arquivo_saida, char *ext_arq){
     Arg_download *arg = malloc(sizeof(Arg_download));
     
@@ -441,6 +450,7 @@ int criar_pasta_dominio(char *dominio){
     return boolean;
 }
 
+// Baixa a pagina inicial do dominio.
 void *percorrer_dominio(void *args){
     Arg_percorrer_dominio *arg = (Arg_percorrer_dominio*)args;
     
@@ -450,15 +460,20 @@ void *percorrer_dominio(void *args){
     char *path = get_path(end, nome_arquivo_saida);
 
     criar_pasta_dominio(end);
+    // Cria os argumentos necessário a função thread que baixa a página
     Arg_download *arg_site = start_arg(end, NULL, nome_arquivo_saida, arg->tipo_arquivo);
 
     pthread_t thread;
+    // Criação do thread com a função requeira, e dando o cast para void pois só se pode
+    // parra uma variavel como argumento. void* pode ser convetido internamente na funcao.
     pthread_create(&thread, NULL, baixar_pagina, (void*)arg_site);
+    // Join garante que o thread será executado e cria uma sequencia de execução dos threads.
     pthread_join(thread, NULL);
             
     percorrer_links(end,arg->tipo_arquivo);
 }
 
+// cria a struct com paramentros necessários para percorrer um dominio.
 Arg_percorrer_dominio* start_arg_dominio(char *dominio, char *tipo_arquivo){
     Arg_percorrer_dominio *arg = malloc(sizeof(Arg_percorrer_dominio));
     arg->dominio = dominio;
