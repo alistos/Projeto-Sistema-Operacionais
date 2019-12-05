@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
 
 typedef struct no{
   char *link;
@@ -27,7 +29,8 @@ int contido_no_dominio(char *link,char *dominio);
 ListaLinks* filtrar_lista(ListaLinks *lista, char *dominio);
 int salvar_links_econtrados(ListaLinks *lista, char *dominio);
 char* get_path(char *dominio, char *file_name);
-char* buscar_links_de_arquivo(char *dominio, char *tipo_arquivo);
+ListaLinks* buscar_links_de_arquivo(ListaLinks *lista, char* dominio ,char *extensao_arquivo);
 void finalizar_string(char *string);
+void exibir_links_lista(ListaLinks *lista);
 
 #endif

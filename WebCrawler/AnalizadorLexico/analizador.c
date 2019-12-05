@@ -1,11 +1,10 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "analizador.h"
+
 #define MAXBUFFER 1024
 #define TRUE 1
 #define FALSE 0
 
+//Aloca espaco para um no de lista escadeada
 No* startNo(char *link){
   No *novo = malloc(sizeof(No));
   novo->link = link;
@@ -14,6 +13,7 @@ No* startNo(char *link){
   return novo;
 }
 
+// Aloca espaco para uma lista encadeada
 ListaLinks* startLista(){
   ListaLinks *lista = malloc(sizeof(ListaLinks));
   lista->primeiro = NULL;
@@ -23,6 +23,7 @@ ListaLinks* startLista(){
   return lista;
 }
 
+// libera o espaco alocado para uma lista
 void free_lista(ListaLinks *lista){
   char *link = pop(lista);
   while (link != NULL){
@@ -31,6 +32,7 @@ void free_lista(ListaLinks *lista){
   free(lista);
 }
 
+// Adiciona um link a uma lista encadeada
 void addLista(ListaLinks* lista, char* link){
   No *novo = startNo(link);
   if(lista->primeiro == NULL){
@@ -44,6 +46,7 @@ void addLista(ListaLinks* lista, char* link){
   lista->quantLinks += 1;
 }
 
+// Esta funcao retira um link salvo na lista e liberar a mémoria e retorna
 char* pop(ListaLinks *lista){
   char* link = NULL;
   if(lista->primeiro != NULL){
@@ -61,6 +64,8 @@ char* pop(ListaLinks *lista){
   return link;
 }
 
+
+// Exibir informações basicas sobre uma lista
 void print_lista(ListaLinks *lista){
   printf("============================================\n");
   printf("LINKS ENCONTRADOS: %d\n", lista->quantLinks);
@@ -68,6 +73,8 @@ void print_lista(ListaLinks *lista){
 
 }
 
+// Função que recebe o nome de um arquivo, abre o mesmo e
+// salva os links encontrados em uma lista encadeada
 ListaLinks* buscarLinks(char* nome_arquivo){
   FILE *arquivo = fopen(nome_arquivo,"r");
   ListaLinks *lista = startLista();
@@ -96,6 +103,7 @@ ListaLinks* buscarLinks(char* nome_arquivo){
   return lista;
 }
 
+// Faz a coleta de um lista a partir de um arquivo
 char* pegar_link(FILE *arquivo){
   char *link = malloc(MAXBUFFER*sizeof(char)), c = getc(arquivo);
 
@@ -109,6 +117,7 @@ char* pegar_link(FILE *arquivo){
   }
 }
 
+// Checa se um links pertence ao dominio requerido
 int contido_no_dominio(char *link, char *dominio){
   int contido = FALSE;
 
@@ -123,6 +132,7 @@ int contido_no_dominio(char *link, char *dominio){
   return contido;
 }
 
+// Filtra uma lista coletando apenas os links que pertencem ao dominio especificado
 ListaLinks* filtrar_lista(ListaLinks *lista, char *dominio){
   ListaLinks *lista_filtrada = startLista();
   No *no = lista->primeiro, *temp;
@@ -139,6 +149,7 @@ ListaLinks* filtrar_lista(ListaLinks *lista, char *dominio){
   return lista_filtrada;
 }
 
+// Coloca o simbolo de fim de string para evitar erros.
 void finalizar_string(char *string){
   int i = 0;
   while (string[i] != '\n'){
@@ -205,7 +216,7 @@ int salvar_links_econtrados(ListaLinks *lista, char *dominio){
   return status;
 }
 
-//esta fucao retorna o caminho para abertura de um arquivo.
+//esta fucao retorna o caminho para abertura de um arquivo na pasta do dominio.
 char* get_path(char *dominio, char *file_name){
     char *path = malloc(MAXBUFFER*sizeof(char));
 
@@ -215,42 +226,35 @@ char* get_path(char *dominio, char *file_name){
 
     return path;
 }
-// procura links que possuem a extenção de arquiv passada como argumento
-char* buscar_links_de_arquivo(char *dominio, char *tipo_arquivo){
-  char *file_name = "linksEncontrados.txt",
-       *path = get_path(dominio,file_name),
-       *buffer_link = malloc(MAXBUFFER*sizeof(char));
-  
-  ListaLinks *lista = startLista();
-  FILE *arquivo = fopen(path, "r");
+// procura links que possuem a extenção de arquivo passada como argumento
+ListaLinks* buscar_links_de_arquivo(ListaLinks *lista, char* dominio ,char *extensao_arquivo){
+  ListaLinks *lista_links_arquivo = startLista();
+  No *no = lista->primeiro;
 
-  if(arquivo!=NULL){
-    while(fgets(buffer_link, MAXBUFFER, arquivo) != NULL){
-      finalizar_string(buffer_link);
-      if(strstr(tipo_arquivo, buffer_link) != NULL){
-        addLista(lista, buffer_link);
-        buffer_link = malloc(MAXBUFFER*sizeof(char));
-      }
+  char *arq = malloc(MAXBUFFER*sizeof(char));
+  strcpy(arq, extensao_arquivo);
+  strcat(arq,".txt");
+
+  FILE *arquivo = fopen(get_path(dominio, arq), "a");
+
+  while(no != NULL){
+    if(strstr(no->link, extensao_arquivo)){
+      char *buffer = malloc(strlen(no->link)+1);
+      strcpy(buffer, no->link);
+      addLista(lista_links_arquivo, buffer);
+      fprintf(arquivo,"%s\n", no->link);
     }
-    fclose(arquivo);
+    no = no->proximo;
   }
-  
-  char *link_temp = pop(lista), *temp;
-  char *str = "================== LINKS ENCONTRADOS =========================\n";
-  int contagem_links = lista->quantLinks;
+  return lista_links_arquivo;
+}
 
-  while(link_temp != NULL){
-    strcat(str, "->");
-    strcat(str, link_temp);
-    strcat(str, "\n");
-
-    link_temp = pop(lista);
+// Exibi em console todos os links de uma lista
+void exibir_links_lista(ListaLinks *lista){
+  No *no = lista->primeiro;
+  while(no != NULL){
+    printf("%s\n", no->link);
+    printf("---------------------------------------------------------------------\n");
+    no = no->proximo;
   }
-  snprintf(temp, 10, "%d", contagem_links);//converte int em string
-
-  strcat(str, "LINKS ENCONTRADOS : ");
-  strcat(str, temp);
-  strcat(str, "\n==========================================================\n");
-  
-  return str;
 }

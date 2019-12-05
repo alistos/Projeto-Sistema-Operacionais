@@ -1,11 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h> //strlen
-#include <sys/socket.h>
 #include "socketCrawler.h"
 #include "AnalizadorLexico/analizador.h"
-#include <unistd.h> //close
-#include <netdb.h> //struct addrinfo e função getaddrinfo
 #define LEN_BUFFER 312
 
 int main(int argc, char *argv[]){

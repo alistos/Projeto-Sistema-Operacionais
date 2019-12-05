@@ -1,28 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h> //strlen
-#include <unistd.h> //close
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h> //struct addrinfo e função getaddrinfo
-#include <pthread.h>
-#include <sys/stat.h>
 #include "socketCrawler.h"
-
-#include <openssl/bio.h>
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-#include <openssl/pem.h>
-#include <openssl/x509.h>
-#include <openssl/x509_vfy.h>
-
-#define RED    "\x1b[31m"
-#define GREEN  "\x1b[32m"
-#define YELLOW "\x1b[33m"
-#define BLUE   "\x1b[34m"
-#define PINK   "\x1b[35m"
-#define RESET  "\x1b[0m"
 
 #define TRUE 1
 #define FALSE 0
@@ -350,6 +326,7 @@ ListaLinks* listar_links_visitados(char *dominio){
     return lista;
 }
 
+// Checa se um link já foi visitado.
 int link_visitado(char *link, char *dominio){
     int boolean = FALSE;
     ListaLinks *lista = listar_links_visitados(dominio);
@@ -367,6 +344,11 @@ int link_visitado(char *link, char *dominio){
     return boolean;
 }
 
+// Função para ser utilizado com threads. Faz download de uma pagina.
+// O parametro passado é do tipo struct devido ser necessário mais de um
+// argumento para a função.
+// funções que são usadas com threads só tem um argumento do tipo void, que pode
+// ser convertido internamento no tipo necessário a funcao, no caso uma struct.
 void *baixar_pagina(void *args){
 
     Arg_download *arg = (Arg_download*)args;
@@ -385,7 +367,13 @@ void *baixar_pagina(void *args){
     close(sock_desc);
 
     ListaLinks *lista = filtrar_lista(buscarLinks(caminho_arquivo), arg->endereco);
+    ListaLinks *lista_link_arquivo = buscar_links_de_arquivo(lista, arg->endereco, arg->extensao_arquivo);
 
+    printf("%s--------------------- LINKS COM EXTENSÃO %s ------------------------\n",BLUE, arg->extensao_arquivo );
+    printf("----------------------- ENCOTRADOS %d ---------------------------\n",lista_link_arquivo->quantLinks);
+    exibir_links_lista(lista_link_arquivo);
+    printf("--------------------------------------------------------------------\n");
+    
     printf("%s++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n", PINK);
     if(arg->subEndereco == NULL){
         printf("ARVORE DO LINKS (PAGINA PRINCIPAL) :%s %s %s\n", RED, arg->endereco, PINK);
@@ -394,18 +382,13 @@ void *baixar_pagina(void *args){
         printf("ARVORE DO LINKS :%s %s %s\n" , RED, arg->subEndereco, PINK);
     }
     print_lista(lista);
-    
-    No *temp = lista->primeiro;
-    int i = 1;
-    while(temp != NULL){
-        printf("%d = %s\n", i,temp->link);
-        temp = temp->proximo;
-        i++;
-    }
+    exibir_links_lista(lista);
     printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n%s", RESET);
+
     salvar_links_econtrados(lista, arg->endereco);
 }
 
+// Percorre os links encontrados e salvos no arquivo.
 void percorrer_links(char* dominio, char* tipo_arquivo){
     char buffer_link[LENBUFFER];
     char nome_arquivo_saida[LENBUFFER], temp[LENBUFFER];
@@ -423,27 +406,29 @@ void percorrer_links(char* dominio, char* tipo_arquivo){
                 strcat(nome_arquivo_saida, temp);
                 strcat(nome_arquivo_saida, ".html");
 
-                Arg_download *args = start_arg(dominio, buffer_link, nome_arquivo_saida);
+                Arg_download *args = start_arg(dominio, buffer_link, nome_arquivo_saida, tipo_arquivo);
                 pthread_t thread;
+                // Para cada link não visitado é criado um thred para baixa a respectiva página
                 pthread_create(&thread,NULL,baixar_pagina,(void*)args);
+                // Join cria sequencia e garante a executação de todos os threads.
                 pthread_join(thread,NULL);
-    
                 contador++;
             
                 salvar_link_visitado(buffer_link, dominio);
-
             }
         }
         fclose(arquivoLinks);
     }
 }
 
-Arg_download* start_arg(char *endereco, char *subEndereco, char* nome_arquivo_saida){
+// Cria a struct com parametros necessários para baixar uma página.
+Arg_download* start_arg(char *endereco, char *subEndereco, char* nome_arquivo_saida, char *ext_arq){
     Arg_download *arg = malloc(sizeof(Arg_download));
     
     arg->endereco = endereco;
     arg->subEndereco = subEndereco;
     arg->nome_arquivo_saida = nome_arquivo_saida;
+    arg->extensao_arquivo = ext_arq;
 
     return arg;
 }
@@ -465,27 +450,30 @@ int criar_pasta_dominio(char *dominio){
     return boolean;
 }
 
+// Baixa a pagina inicial do dominio.
 void *percorrer_dominio(void *args){
     Arg_percorrer_dominio *arg = (Arg_percorrer_dominio*)args;
     
     char *end = arg->dominio; //endereço do site a ser visitado
     char *nome_arquivo_saida = "site.html";
+    char *tipo_arq = arg->tipo_arquivo;
     char *path = get_path(end, nome_arquivo_saida);
 
     criar_pasta_dominio(end);
-    Arg_download *arg_site = start_arg(end, NULL, nome_arquivo_saida);
+    // Cria os argumentos necessário a função thread que baixa a página
+    Arg_download *arg_site = start_arg(end, NULL, nome_arquivo_saida, arg->tipo_arquivo);
 
     pthread_t thread;
+    // Criação do thread com a função requeira, e dando o cast para void pois só se pode
+    // parra uma variavel como argumento. void* pode ser convetido internamente na funcao.
     pthread_create(&thread, NULL, baixar_pagina, (void*)arg_site);
+    // Join garante que o thread será executado e cria uma sequencia de execução dos threads.
     pthread_join(thread, NULL);
             
     percorrer_links(end,arg->tipo_arquivo);
-    //Arg_statistica *args_stat = start_arg_statistica(arg->dominio, arg->tipo_arquivo);
-    //pthread_t thread_stat;
-    //pthread_create(&thread_stat,NULL,exibir_statisticas,(void*)args_stat);
-    //pthread_join(thread_stat,NULL);
 }
 
+// cria a struct com paramentros necessários para percorrer um dominio.
 Arg_percorrer_dominio* start_arg_dominio(char *dominio, char *tipo_arquivo){
     Arg_percorrer_dominio *arg = malloc(sizeof(Arg_percorrer_dominio));
     arg->dominio = dominio;
@@ -499,11 +487,4 @@ Arg_statistica* start_arg_statistica(char *dominio, char *tipo_arquivo){
     arg->tipo_arquivo = tipo_arquivo;
     
     return arg;
-}
-
-void *exibir_statisticas(void *args){
-    Arg_statistica *arg = (Arg_statistica*)args;
-    printf("%s============== LINKS DE EXTENSAO DE ARQUIVO %s ENCONTRADOS ===============", RED, arg->tipo_arquivo);
-    char *str = buscar_links_de_arquivo(arg->dominio, arg->tipo_arquivo);
-    printf("%s%s",str, RESET);
 }
